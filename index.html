@@ -222,7 +222,16 @@
                         <div class="form-group"><label>Ville</label><input type="text" placeholder="ex: 33127"></div>
                     </div>
                 </div>
-
+<div class="card" style="background-color: #fdfefe; border-left: 4px solid var(--success-color);">
+                    <h3 style="color: var(--success-color); border-bottom-color: #eee;">💾 Sauvegarde et Restauration</h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 15px; color: #666;">Enregistrez votre espace de travail (fichiers Siècle, DEPP, et imports Pronote) pour reprendre votre analyse plus tard sans avoir à tout réimporter.</p>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <button id="btn-save-session" class="btn btn-primary" style="background-color: var(--success-color);">💾 Sauvegarder la session (.json)</button>
+                        <button id="btn-restore-session" class="btn btn-outline" style="border-color: #f39c12; color: #f39c12;">📂 Restaurer une session</button>
+                        <input type="file" id="file-restore-session" accept=".json" hidden>
+                        <span id="session-feedback" role="status" aria-live="polite"></span>
+                    </div>
+                </div>
                 <div class="card">
                     <h3>Importation des données (Fichiers Excel)</h3>
                     <div class="dropzone-container">
@@ -707,6 +716,7 @@ const appData = {
 
         document.addEventListener('DOMContentLoaded', () => {
             initNavigation();
+			initSaveRestore();
             initDragAndDrop();
             initPronoteParser();
             initStatControls();
@@ -3128,6 +3138,108 @@ function extractData(data, zoneId) {
                 btn.disabled = false;
             }
         });
+		
+		// ==========================================
+        // MODULE : SAUVEGARDE ET RESTAURATION
+        // ==========================================
+        function initSaveRestore() {
+            const btnSave = document.getElementById('btn-save-session');
+            const btnRestore = document.getElementById('btn-restore-session');
+            const fileRestore = document.getElementById('file-restore-session');
+            const feedback = document.getElementById('session-feedback');
+
+            if (!btnSave || !btnRestore || !fileRestore) return;
+
+            // --- SAUVEGARDE ---
+            btnSave.addEventListener('click', () => {
+                if (!appData.fichiers.eleves && !appData.fichiers.depp) {
+                    feedback.style.color = "var(--danger-color)";
+                    feedback.innerText = "❌ Aucune donnée à sauvegarder.";
+                    return;
+                }
+
+                try {
+                    btnSave.innerText = "⏳ Sauvegarde...";
+                    
+                    const sessionData = {
+                        fichiers: {
+                            eleves: appData.fichiers.eleves,
+                            depp: appData.fichiers.depp,
+                            deppHistory: appData.fichiers.deppHistory
+                        },
+                        // Convertir la Map Pronote en tableau pour la sérialisation JSON
+                        pronoteMap: Array.from(appData.pronoteMap.entries()),
+                        state: appData.state
+                    };
+
+                    const dataStr = JSON.stringify(sessionData);
+                    const blob = new Blob([dataStr], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const link = document.createElement('a');
+                    link.href = url;
+                    
+                    const epleName = document.getElementById('input-etab-name').value.replace(/\s+/g, '_') || "Etablissement";
+                    const date = new Date().toISOString().slice(0, 10);
+                    link.download = `Session_EVA_NAT_${epleName}_${date}.json`;
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    
+                    feedback.style.color = "var(--success-color)";
+                    feedback.innerText = "✔ Session sauvegardée !";
+                } catch (e) {
+                    console.error("Erreur lors de la sauvegarde :", e);
+                    feedback.style.color = "var(--danger-color)";
+                    feedback.innerText = "❌ Erreur de sauvegarde (fichier trop volumineux ?).";
+                } finally {
+                    btnSave.innerText = "💾 Sauvegarder la session (.json)";
+                    setTimeout(() => feedback.innerText = "", 4000);
+                }
+            });
+
+            // --- RESTAURATION ---
+            btnRestore.addEventListener('click', () => fileRestore.click());
+
+            fileRestore.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                feedback.style.color = "var(--text-dark)";
+                feedback.innerText = "⏳ Restauration en cours...";
+
+                reader.onload = (event) => {
+                    try {
+                        const parsedData = JSON.parse(event.target.result);
+                        
+                        // Restauration des données dans l'état global
+                        if(parsedData.fichiers) appData.fichiers = parsedData.fichiers;
+                        if(parsedData.pronoteMap) appData.pronoteMap = new Map(parsedData.pronoteMap); // Reconstruire la Map
+                        if(parsedData.state) Object.assign(appData.state, parsedData.state);
+                        
+                        fileRestore.value = ""; // Réinitialiser l'input file
+
+                        // Mettre à jour les interfaces dépendantes des données
+                        if (document.getElementById('view-results').classList.contains('active')) populateClassDropdown();
+                        if (document.getElementById('view-results-origin').classList.contains('active')) populateOriginDropdown();
+                        if (document.getElementById('view-rapport').classList.contains('active')) populateRapportOriginsList();
+                        
+                        feedback.style.color = "var(--success-color)";
+                        feedback.innerText = "✔ Données restaurées avec succès !";
+                    } catch (err) {
+                        console.error("Erreur de lecture du fichier :", err);
+                        feedback.style.color = "var(--danger-color)";
+                        feedback.innerText = "❌ Fichier invalide ou corrompu.";
+                    } finally {
+                        setTimeout(() => feedback.innerText = "", 5000);
+                    }
+                };
+                reader.readAsText(file);
+            });
+        }
     </script>
 </body>
 </html>

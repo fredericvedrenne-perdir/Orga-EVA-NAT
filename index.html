@@ -1386,10 +1386,9 @@ async function generateOriginResultsPDF(selectedOrigins, selectedLevels, subject
             let compIndex = 1;
             let legendItems = [];
 
-            sheetsToRead.forEach(sheetObj => {
+sheetsToRead.forEach(sheetObj => {
                 const sampleRow = sheetObj.data[0] || {};
-                const compCols = Object.keys(sampleRow).filter(col => !col.toLowerCase().includes('nom') && !col.toLowerCase().includes('prénom') && !col.toLowerCase().includes('prenom') && !col.toLowerCase().includes('classe') && !col.toLowerCase().includes('date'));
-                
+                const compCols = Object.keys(sampleRow).slice(3).filter(col => !col.toLowerCase().includes('date'));
                 theadHtml += `<th colspan="${compCols.length}" class="subject-th">${sheetObj.title}</th>`;
                 
                 compCols.forEach(c => {
@@ -1671,12 +1670,9 @@ const opt = {
             let compIndex = 1;
             let legendItems = [];
 
-            sheetsToRead.forEach(sheetObj => {
+sheetsToRead.forEach(sheetObj => {
                 const sampleRow = sheetObj.data[0] || {};
-                const compCols = Object.keys(sampleRow).filter(col => !col.toLowerCase().includes('nom') && !col.toLowerCase().includes('prénom') && !col.toLowerCase().includes('prenom') && !col.toLowerCase().includes('classe') && !col.toLowerCase().includes('date'));
-                
-                theadHtml += `<th colspan="${compCols.length}" class="subject-th">${sheetObj.title}</th>`;
-                
+                const compCols = Object.keys(sampleRow).slice(3).filter(col => !col.toLowerCase().includes('date'));                
                 compCols.forEach(c => {
                     const alias = `C${compIndex}`;
                     allCompetences.push({ sheet: sheetObj, colName: c, alias: alias });
@@ -2488,13 +2484,12 @@ function extractData(data, zoneId) {
             html += `<tr><th style="background-color:#fff; border:none; z-index: 3; position: sticky; left:0; top:0;"></th>`;
             
             let allCompetences = [];
-            sheetsToRead.forEach(sheetObj => {
+sheetsToRead.forEach(sheetObj => {
                 const sampleRow = sheetObj.data[0] || {};
-                const compCols = Object.keys(sampleRow).filter(col => !col.toLowerCase().includes('nom') && !col.toLowerCase().includes('prénom') && !col.toLowerCase().includes('prenom') && !col.toLowerCase().includes('classe') && !col.toLowerCase().includes('date'));
+                const compCols = Object.keys(sampleRow).slice(3).filter(col => !col.toLowerCase().includes('date'));
                 html += `<th colspan="${compCols.length}" class="subject-th">${sheetObj.title}</th>`;
                 compCols.forEach(c => allCompetences.push({ sheet: sheetObj, colName: c }));
-            });
-            
+            });            
             html += `</tr><tr><th class="student-name" style="white-space: normal; min-width: 200px; max-width: 300px; line-height: 1.3;">Élèves venant de :<br><strong style="font-size: 0.8rem; color: var(--primary-color); display: block; margin-top: 5px;">${selectedOrigin}</strong></th>`;
             
             allCompetences.forEach(comp => {
@@ -2743,7 +2738,7 @@ function extractData(data, zoneId) {
                 if (match) {
                     const matiere = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
                     if (!stats[matiere]) stats[matiere] = {};
-                    const competences = Object.keys(deppList[sheetName][0] || {}).filter(col => !col.toLowerCase().includes('nom') && !col.toLowerCase().includes('prénom') && !col.toLowerCase().includes('prenom') && !col.toLowerCase().includes('classe') && !col.toLowerCase().includes('date'));
+const competences = Object.keys(deppList[sheetName][0] || {}).slice(3).filter(col => !col.toLowerCase().includes('date'));
                     
                     deppList[sheetName].forEach(row => {
                         const key = normalizeKey(row['Nom élève'] || row['Nom de famille'] || row['Nom'], row['Prénom élève'] || row['Prénom']);
@@ -2874,15 +2869,11 @@ function extractData(data, zoneId) {
                     if (!isNaN(g1) && g1 > 20) targetSubj.year = "20" + g1;
                     else if (!isNaN(g2) && g2 > 20) targetSubj.year = "20" + g2;
 
-                    const competences = Object.keys(deppObject[sheetName][0] || {}).filter(col => 
-                        !col.toLowerCase().includes('nom') && 
-                        !col.toLowerCase().includes('prénom') && 
-                        !col.toLowerCase().includes('prenom') && 
-                        !col.toLowerCase().includes('classe') && 
+const competences = Object.keys(deppObject[sheetName][0] || {}).slice(3).filter(col => 
                         !col.toLowerCase().includes('date') &&
                         !col.toLowerCase().includes('origine')
                     );
-                    
+
                     competences.forEach(compName => {
                         targetSubj.competences[compName] = { sat: 0, fra: 0, bes: 0, pdr: 0, total: 0 };
                         

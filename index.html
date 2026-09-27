@@ -208,69 +208,94 @@
         <!-- CONTENU PRINCIPAL -->
         <main class="main-content" role="main">
             
-            <!-- VUE : CONFIGURATION -->
+<!-- VUE : CONFIGURATION -->
             <section id="view-configuration" class="view-section active">
                 <header>
                     <h1>Paramétrage et Configuration</h1>
-                    <p>Saisissez les informations et importez les données pour générer les analyses.</p>
+                    <p>Saisissez les informations et suivez les étapes d'importation pour générer les analyses.</p>
                 </header>
                 
+                <!-- IDENTITÉ DE L'ÉTABLISSEMENT -->
                 <div class="card">
                     <h3>Identité de l'établissement</h3>
                     <div class="form-grid">
-                        <div class="form-group"><label>Nom de l'établissement</label><input type="text" id="input-etab-name" placeholder="ex: Collège de l'Estey"></div>
-                        <div class="form-group"><label>Ville</label><input type="text" placeholder="ex: 33127"></div>
+                        <div class="form-group">
+                            <label for="input-etab-name">Nom de l'établissement</label>
+                            <input type="text" id="input-etab-name" placeholder="ex: Collège de l'Estey">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-etab-city">Ville</label>
+                            <input type="text" id="input-etab-city" placeholder="ex: Saint jean d'Illac">
+                        </div>
                     </div>
                 </div>
-<div class="card" style="background-color: #fdfefe; border-left: 4px solid var(--success-color);">
+
+                <!-- SAUVEGARDE ET RESTAURATION -->
+                <div class="card" style="background-color: #fdfefe; border-left: 4px solid var(--success-color);">
                     <h3 style="color: var(--success-color); border-bottom-color: #eee;">💾 Sauvegarde et Restauration</h3>
-                    <p style="font-size: 0.9rem; margin-bottom: 15px; color: #666;">Enregistrez votre espace de travail (fichiers Siècle, DEPP, et imports Pronote) pour reprendre votre analyse plus tard sans avoir à tout réimporter.</p>
+                    <p style="font-size: 0.9rem; margin-bottom: 15px; color: #666;">
+                        Enregistrez votre espace de travail (données DEPP, Pronote et Siècle) pour reprendre votre analyse plus tard sans avoir à tout réimporter.
+                    </p>
                     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                        <button id="btn-save-session" class="btn btn-primary" style="background-color: var(--success-color);">💾 Sauvegarder la session (.json)</button>
-                        <button id="btn-restore-session" class="btn btn-outline" style="border-color: #f39c12; color: #f39c12;">📂 Restaurer une session</button>
-                        <input type="file" id="file-restore-session" accept=".json" hidden>
+                        <button id="btn-save-session" class="btn btn-primary" style="background-color: var(--success-color);" aria-label="Sauvegarder la session au format JSON">💾 Sauvegarder la session</button>
+                        <button id="btn-restore-session" class="btn btn-outline" style="border-color: #f39c12; color: #f39c12;" aria-label="Restaurer une session depuis un fichier JSON">📂 Restaurer une session</button>
+                        <input type="file" id="file-restore-session" accept=".json" hidden aria-hidden="true">
                         <span id="session-feedback" role="status" aria-live="polite"></span>
                     </div>
                 </div>
-                <div class="card">
-                    <h3>Importation des données (Fichiers Excel)</h3>
-                    <div class="dropzone-container">
-                        <div class="dropzone" id="drop-eleves" role="button" tabindex="0">
-                            <input type="file" id="file-eleves" accept=".xlsx, .xls, .csv, .zip" hidden>
-                            <span class="dropzone-icon">📁</span>
-                            <span class="dropzone-text"><strong>Fichier Siècle (Élèves)</strong><br>ElevesComplete.xls</span>
-                            <span class="dropzone-hint">Glissez-déposez ou cliquez ici (.zip accepté)</span>
+
+                <!-- ÉTAPE 1 : PRONOTE (ANNUAIRE) -->
+                <div class="card pronote-zone">
+                    <h3>1. Initialisation des effectifs (Import Pronote)</h3>
+                    <div style="display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap;">
+                        <div class="pronote-instructions" style="width: fit-content; margin-bottom: 0; height: fit-content;">
+                            <strong>Pour charger les effectifs depuis Pronote :</strong>
+                            <ol>
+                                <li> Dans Pronote (Menu Ressources > Élèves), affichez tous les élèves de l'établissement.</li>
+                                <li> Assurez-vous d'afficher les colonnes : <strong>Nom, Prénom, Classe, Sexe (ou Civilité) et Étab. d'origine</strong>.</li>
+                                <li> Sélectionnez tous les élèves affectés dans une classe et cliquez en haut à droite sur copier les donénes en csv.</li>
+                                <li> Collez les données (Ctrl+V) dans la zone ci-contre.</li>
+                            </ol>
                         </div>
-                        <div class="dropzone" id="drop-depp" role="button" tabindex="0">
-                            <input type="file" id="file-depp" accept=".xlsx, .xls, .csv, .zip" hidden>
-                            <span class="dropzone-icon">📊</span>
+                        <div style="flex: 1; display: flex; flex-direction: column; min-width: 300px;">
+                            <textarea id="pronote-paste-zone" placeholder="Collez les données copiées depuis Pronote ici..." style="flex: 1;" aria-label="Zone textuelle pour coller les données de Pronote"></textarea>
+                            <div style="display: flex; gap: 15px; align-items: center; margin-top: 15px;">
+                                <button id="btn-load-pronote" class="btn btn-primary" aria-label="Valider et parser les données Pronote">Valider l'annuaire Pronote</button>
+                                <span id="pronote-feedback" role="status" aria-live="polite"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ÉTAPE 2 : DEPP (RÉSULTATS) -->
+                <div class="card">
+                    <h3>2. Importation des résultats (Fichier DEPP)</h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 15px; color: #666;">Importez le fichier excel dans le menu établissmeent du site Restitution de la DEPP.</p>
+                    <div class="dropzone-container">
+                        <div class="dropzone" id="drop-depp" role="button" tabindex="0" aria-label="Zone de dépôt du fichier de restitution DEPP">
+                            <input type="file" id="file-depp" accept=".xlsx, .xls, .csv, .zip" hidden aria-hidden="true">
+                            <span class="dropzone-icon" aria-hidden="true">📊</span>
                             <span class="dropzone-text"><strong>Restitution DEPP</strong><br>Ex: 0333134C_Etablissement...</span>
                             <span class="dropzone-hint">
                                 Glissez-déposez ou cliquez ici (.zip accepté)<br>
-                                <a href="https://depp26-portal-exhaustives.depp.taocloud.fr/login" target="_blank" class="depp-link" aria-label="Lien vers le portail DEPP">Portail DEPP</a>
+                                <a href="https://depp26-portal-exhaustives.depp.taocloud.fr/login" target="_blank" class="depp-link" aria-label="Ouvrir le portail DEPP dans un nouvel onglet">Portail DEPP</a>
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <div class="card pronote-zone">
-                    <h3>Importation Pronote (Établissement d'origine)</h3>
-                    <div style="display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap;">
-                        <div class="pronote-instructions" style="width: fit-content; margin-bottom: 0; height: fit-content;">
-                            <strong>Pour affiner l'analyse par établissement d'origine :</strong>
-                            <ol>
-                                <li>Rendez-vous sur votre client Pronote (Menu Ressources > Élèves).</li>
-                                <li>Assurez-vous que la colonne Étab. d'origine est bien affichée dans la grille.</li>
-                                <li>Sélectionnez tous les élèves inscrits dans une classe, puis copiez les données.</li>
-                                <li>Collez le contenu (Ctrl+V) dans la zone à droite.</li>
-                            </ol>
-                        </div>
-                        <div style="flex: 1; display: flex; flex-direction: column; min-width: 300px;">
-                            <textarea id="pronote-paste-zone" placeholder="Collez les données copiées depuis Pronote ici..." style="flex: 1;"></textarea>
-                            <div style="display: flex; gap: 15px; align-items: center; margin-top: 15px;">
-                                <button id="btn-load-pronote" class="btn btn-primary">Valider l'import Pronote</button>
-                                <span id="pronote-feedback" role="status" aria-live="polite"></span>
-                            </div>
+                <!-- ÉTAPE 3 : SIÈCLE (EMAILS POUR PUBLIPOSTAGE) -->
+                <div class="card" style="background-color: #f9fbfd; border-left: 4px solid var(--primary-color);">
+                    <h3>3. E-mails responsables (Optionnel - Pour le Publipostage)</h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 15px; color: #666;">
+                        Importez le fichier Siècle (ElevesComplete.xls) <strong>uniquement</strong> si vous utilisez la fonction de publipostage (onglet "Traiter les fichiers PDF"). L'affectation des élèves dans les classes restera dictée par l'étape 1.
+                    </p>
+                    <div class="dropzone-container">
+                        <div class="dropzone" id="drop-emails" role="button" tabindex="0" aria-label="Zone de dépôt du fichier Siècle pour l'extraction des e-mails">
+                            <input type="file" id="file-emails" accept=".xlsx, .xls, .csv, .zip" hidden aria-hidden="true">
+                            <span class="dropzone-icon" aria-hidden="true">📧</span>
+                            <span class="dropzone-text"><strong>Fichier Siècle (Élèves)</strong><br>ElevesComplete.xls</span>
+                            <span class="dropzone-hint">Glissez-déposez ou cliquez ici</span>
                         </div>
                     </div>
                 </div>
@@ -2162,7 +2187,7 @@ sheetsToRead.forEach(sheetObj => {
                         const zip = new JSZip();
                         const mailMergeData = [];
                         
-                        // Data Mining des Emails (Siècle)
+// Data Mining des Emails (Siècle)
                         const emailMap = new Map();
                         if (appData.fichiers.eleves) {
                             appData.fichiers.eleves.forEach(el => {
@@ -2305,59 +2330,114 @@ function extractData(data, zoneId) {
                     workbook.SheetNames.forEach(sheet => { appData.fichiers.depp[sheet] = XLSX.utils.sheet_to_json(workbook.Sheets[sheet], { defval: "" }); });
                 } 
                 else if (zoneId.startsWith('drop-depp-n')) {
-                    // Traitement spécifique pour l'historique : on stocke le fichier complet dans un dictionnaire
+                    // Historisation pour le diaporama
                     const historyKey = zoneId.replace('drop-depp-', '');
                     appData.fichiers.deppHistory[historyKey] = {};
                     workbook.SheetNames.forEach(sheet => { appData.fichiers.deppHistory[historyKey][sheet] = XLSX.utils.sheet_to_json(workbook.Sheets[sheet], { defval: "" }); });
                 }
-                else if (zoneId === 'drop-eleves') {
-                    appData.fichiers.eleves = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
+                else if (zoneId === 'drop-emails') {
+                    // NOUVEAU : Extraction exclusive des e-mails depuis Siècle (Création d'un dictionnaire)
+                    const rawSiecle = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
+                    appData.emailMap = new Map(); // Dictionnaire distinct
+                    
+                    rawSiecle.forEach(el => {
+                        const k = normalizeKey(el['Nom de famille'], el['Prénom']);
+                        if (k) {
+                            let mail1 = "", mail2 = "";
+                            Object.keys(el).forEach(col => {
+                                const lowerCol = col.toLowerCase();
+                                if (lowerCol.includes('mail') || lowerCol.includes('courriel')) {
+                                    if (!mail1) mail1 = el[col];
+                                    else if (!mail2) mail2 = el[col];
+                                }
+                            });
+                            appData.emailMap.set(k, { mail1, mail2 });
+                        }
+                    });
+                    console.log(`[Import] ${appData.emailMap.size} adresses e-mails récupérées pour le publipostage.`);
                 }
                 
+                // Actualisation des interfaces si les données sont prêtes
                 if (document.getElementById('view-results').classList.contains('active')) populateClassDropdown();
                 if (document.getElementById('view-results-origin').classList.contains('active')) populateOriginDropdown();
                 if (document.getElementById('view-rapport').classList.contains('active')) populateRapportOriginsList();
                 
-            } catch (error) { alert("Erreur lors du parsing du fichier Excel."); }
+            } catch (error) { 
+                alert("Erreur lors de la lecture du fichier. Assurez-vous qu'il s'agit d'un fichier Excel valide."); 
+                console.error(error);
+            }
         }
-
-        function initPronoteParser() {
+function initPronoteParser() {
             document.getElementById('btn-load-pronote').addEventListener('click', () => {
                 const text = document.getElementById('pronote-paste-zone').value;
                 const feedback = document.getElementById('pronote-feedback');
-                if (!text.trim()) { feedback.style.color = 'var(--danger-color)'; feedback.innerText = 'Aucune donnée collée.'; return; }
+                
+                if (!text.trim()) { 
+                    feedback.style.color = 'var(--danger-color)'; 
+                    feedback.innerText = 'Aucune donnée collée.'; 
+                    return; 
+                }
+                
                 const lines = text.trim().split(/\r?\n/);
-                if (lines.length < 2) { feedback.style.color = 'var(--danger-color)'; feedback.innerText = 'Format invalide. Pensez à copier les en-têtes de colonnes.'; return; }
+                if (lines.length < 2) { 
+                    feedback.style.color = 'var(--danger-color)'; 
+                    feedback.innerText = 'Format invalide. Pensez à copier les en-têtes de colonnes depuis Pronote.'; 
+                    return; 
+                }
 
-                // Nettoyage agressif des en-têtes pour une détection stricte
+                // Nettoyage des en-têtes pour une identification robuste
                 const headers = lines[0].split('\t').map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
-                appData.pronoteMap.clear();
-                let count = 0;
-
-                // Recherche flexible de la position des colonnes
+                
+                // Identification dynamique des index des colonnes requises
                 const nomIdx = headers.findIndex(h => h === 'nom' || h.includes('famille'));
                 const prenomIdx = headers.findIndex(h => h === 'prénom' || h === 'prenom');
                 const origIdx = headers.findIndex(h => h.includes('orig') || h.includes('étab') || h.includes('etab'));
+                const classeIdx = headers.findIndex(h => h.includes('classe') || h === 'division');
+                const sexeIdx = headers.findIndex(h => h === 'sexe' || h === 'civilite' || h === 'civilité');
 
-                if (nomIdx === -1 || prenomIdx === -1 || origIdx === -1) {
+                if (nomIdx === -1 || prenomIdx === -1 || classeIdx === -1) {
                     feedback.style.color = 'var(--danger-color)';
-                    feedback.innerText = "Colonnes introuvables. Vérifiez que 'Nom', 'Prénom' et 'Étab. d'origine' sont affichés.";
+                    feedback.innerText = "Colonnes critiques introuvables. Vérifiez que 'Nom', 'Prénom' et 'Classe' sont bien copiés.";
                     return;
                 }
 
+                appData.pronoteMap.clear();
+                appData.fichiers.eleves = []; // CRUCIAL : On initialise l'annuaire principal ici
+                let count = 0;
+
                 for (let i = 1; i < lines.length; i++) {
                     const cols = lines[i].split('\t').map(c => c.replace(/^"|"$/g, '').trim());
-                    // On vérifie que la ligne a suffisamment de colonnes
-                    if (cols.length <= Math.max(nomIdx, prenomIdx, origIdx)) continue;
+                    if (cols.length <= Math.max(nomIdx, prenomIdx, classeIdx)) continue;
                     
                     const nom = cols[nomIdx];
                     const prenom = cols[prenomIdx];
-                    const origine = cols[origIdx];
+                    const classe = cols[classeIdx];
+                    const origine = origIdx !== -1 ? cols[origIdx] : "Non renseigné";
                     
-                    if (nom && prenom && origine) {
+                    let sexeStr = "F"; 
+                    if (sexeIdx !== -1) {
+                        const valSexe = cols[sexeIdx].toUpperCase();
+                        if (valSexe === 'M' || valSexe === 'MASCULIN' || valSexe === 'MONSIEUR' || valSexe === 'MR') {
+                            sexeStr = 'M';
+                        }
+                    }
+                    
+                    if (nom && prenom && classe) {
                         const key = normalizeKey(nom, prenom);
                         if (key) { 
+                            // Sauvegarde de l'origine
                             appData.pronoteMap.set(key, origine); 
+                            
+                            // Hydratation de la base élèves
+                            appData.fichiers.eleves.push({
+                                'Nom de famille': nom,
+                                'Prénom': prenom,
+                                'Classe': classe,
+                                'Sexe': sexeStr,
+                                'Etablissement d\'origine': origine,
+                                'Type Structure': 'D'
+                            });
+                            
                             count++; 
                         }
                     }
@@ -2365,13 +2445,15 @@ function extractData(data, zoneId) {
                 
                 if (count > 0) {
                     feedback.style.color = 'var(--success-color)';
-                    feedback.innerText = `✔ ${count} origines récupérées avec succès.`;
+                    feedback.innerText = `✔ ${count} élèves importés avec succès. L'annuaire est prêt.`;
+                    
+                    if (document.getElementById('view-results').classList.contains('active')) populateClassDropdown();
+                    if (document.getElementById('view-results-origin').classList.contains('active')) populateOriginDropdown();
+                    if (document.getElementById('view-rapport').classList.contains('active')) populateRapportOriginsList();
                 } else {
                     feedback.style.color = 'var(--danger-color)';
-                    feedback.innerText = "Erreur de lecture : vérifiez la structure des données collées.";
+                    feedback.innerText = "Erreur de lecture : aucune donnée exploitable trouvée.";
                 }
-                
-                if (document.getElementById('view-rapport').classList.contains('active')) populateRapportOriginsList();
             });
         }
 

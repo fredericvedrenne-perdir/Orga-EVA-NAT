@@ -354,7 +354,7 @@
                 </div>
             </section>
 
-            <!-- VUE : RÉSULTATS PAR CLASSE -->
+<!-- VUE : RÉSULTATS PAR CLASSE -->
             <section id="view-results" class="view-section">
                 <header>
                     <h1>Résultats nominatifs par classe</h1>
@@ -371,9 +371,10 @@
                         </div>
                         <div class="radio-group" role="radiogroup" aria-label="Sélection de la matière">
                             <span><strong>Matière(s) :</strong></span>
-                            <label><input type="radio" name="results-subject" value="fr" checked> Français</label>
+                            <!-- CORRECTION DU NAME ICI -->
+                            <label><input type="radio" name="results-subject" value="fr"> Français</label>
                             <label><input type="radio" name="results-subject" value="math"> Mathématiques</label>
-                            <label><input type="radio" name="results-subject" value="both"> Français & Maths</label>
+                            <label><input type="radio" name="results-subject" value="both" checked> Français & Maths</label>
                         </div>
                         
                         <div class="controls-right" style="flex-grow: 1; display: flex; justify-content: flex-end;">
@@ -386,7 +387,7 @@
                     <div class="info-data">Veuillez importer les données puis sélectionner une classe ci-dessus.</div>
                 </div>
             </section>
-
+			
             <!-- VUE : RÉSULTATS PAR ÉTABLISSEMENT D'ORIGINE -->
             <section id="view-results-origin" class="view-section">
                 <header>
@@ -402,6 +403,8 @@
                                 <option value="6" selected>6ème</option>
                                 <option value="5">5ème</option>
                                 <option value="4">4ème</option>
+								<option value="2PRO">2nde Pro</option>
+<option value="1CAP">1ère CAP</option>
 								                                <option value="2">2nde GT</option>
 
                             </select>
@@ -466,6 +469,8 @@
                         <label><input type="radio" name="level-select" value="6" checked> 6ème</label>
                         <label><input type="radio" name="level-select" value="5"> 5ème</label>
                         <label><input type="radio" name="level-select" value="4"> 4ème</label>
+						<label><input type="radio" name="level-select" value="2PRO"> 2nde Pro</label>
+<label><input type="radio" name="level-select" value="1CAP"> 1ère CAP</label>
 						                        <label><input type="radio" name="level-select" value="2"> 2nde GT</label>
                     </div>
                     <div class="controls-right">
@@ -493,7 +498,9 @@
                         <label><input type="checkbox" class="chk-rapport-level" value="6" checked> 6ème</label>
                         <label><input type="checkbox" class="chk-rapport-level" value="5" checked> 5ème</label>
                         <label><input type="checkbox" class="chk-rapport-level" value="4" checked> 4ème</label>
-						                        <label><input type="checkbox" class="chk-rapport-level" value="2" checked> 2nde GT</label>
+						 <label><input type="checkbox" class="chk-rapport-level" value="2PRO" checked> 2nde Pro</label>
+<label><input type="checkbox" class="chk-rapport-level" value="1CAP" checked> 1ère CAP</label>
+                       <label><input type="checkbox" class="chk-rapport-level" value="2" checked> 2nde GT</label>
 
                     </div>
                     
@@ -689,7 +696,9 @@
                         <label><input type="checkbox" class="chk-export-origin-level" value="6" checked> 6ème</label>
                         <label><input type="checkbox" class="chk-export-origin-level" value="5" checked> 5ème</label>
                         <label><input type="checkbox" class="chk-export-origin-level" value="4" checked> 4ème</label>
-						                        <label><input type="checkbox" class="chk-export-origin-level" value="2" checked> 2nde GT</label>
+						 <label><input type="checkbox" class="chk-export-origin-level" value="2PRO" checked> 2nde Pro</label>
+<label><input type="checkbox" class="chk-export-origin-level" value="1CAP" checked> 1ère CAP</label>
+                       <label><input type="checkbox" class="chk-export-origin-level" value="2" checked> 2nde GT</label>
 
                     </div>
                 </div>
@@ -717,6 +726,27 @@
             </div>
         </div>
     </div>
+	
+<!-- MODALE : AFFILIATION DES CLASSES PRO/CAP -->
+    <div id="modal-class-mapping" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-mapping-title">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 id="modal-mapping-title">🛠 Affiliation des classes professionnelles</h2>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 15px; padding: 10px; background: #e8f4f8; border-left: 4px solid var(--primary-color); font-size: 0.9rem;">
+                    <strong>Action requise :</strong> Nous avons détecté des données pour les voies professionnelles dans le fichier DEPP. Veuillez indiquer à quels niveaux correspondent vos classes issues de Pronote.
+                </p>
+                <div id="mapping-class-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto;">
+                    <!-- Injecté via JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-save-mapping" class="btn btn-primary">Enregistrer l'affiliation</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Conteneur tampon pour la génération PDF -->
     <div id="pdf-export-container"></div>
@@ -725,19 +755,21 @@
          LOGIQUE APPLICATIVE (Vanilla JS)
          ======================================================================== -->
     <script>
-        const appData = {
-            fichiers: { eleves: null, depp: null, deppHistory: {} },
-            pronoteMap: new Map(),
-            state: {
-                currentViewType: null,
-                selectedLevel: '6',
-                isGraphicalView: true,
-                selectedOrigins: [],
-                absentsSortMode: 'alpha',
-                missingResults: { fr: [], math: [] }
-            },
-            pdfFilesList: []
-        };
+const appData = {
+    fichiers: { eleves: null, depp: null, deppHistory: {} },
+    pronoteMap: new Map(),
+    emailMap: new Map(), // <-- NOUVEAU : Déclaration formelle
+    state: {
+        currentViewType: null,
+        selectedLevel: '6',
+        isGraphicalView: true,
+        selectedOrigins: [],
+        absentsSortMode: 'alpha',
+        missingResults: { fr: [], math: [] },
+        classMappings: {}
+    },
+    pdfFilesList: []
+};
 
         // TODO: Vérifier les mots-clés d'extraction pour les PDF DEPP de 2nde GT si nécessaire
         const PDF_KEYWORDS = {
@@ -747,16 +779,178 @@
             eleveEnd: " En début"
         };
 
+/**
+ * NOUVEAU HELPER CENTRAL : Détermine le niveau réel d'une classe.
+ * Interroge le mapping utilisateur en priorité, puis fallback sur la détection classique.
+ */
+function getLevelFromClass(classe) {
+    if (!classe) return null;
+    if (appData.state.classMappings && appData.state.classMappings[classe]) {
+        return appData.state.classMappings[classe];
+    }
+    if (classe.startsWith('2') && !classe.includes('PRO') && !classe.includes('CAP')) return '2';
+    if (classe.startsWith('6')) return '6';
+    if (classe.startsWith('5')) return '5';
+    if (classe.startsWith('4')) return '4';
+    return null;
+}
+
+/**
+ * NOUVEAU HELPER CENTRAL : Dictionnaire de traduction universel.
+ * Convertit la diversité sémantique DEPP (Collège, 2GT, 2Pro, CAP) en codes standards.
+ */
+function parseDeppValue(val) {
+    if (!val) return null;
+    const v = String(val).toLowerCase().trim();
+    if (v === "" || v === "nan" || v === "undefined") return null;
+    
+    // Évaluations adaptatives (ex: LINU 1CAP) -> Élève non testé sur ce module spécifique
+    if (v.includes('non concerné')) return 'nc';
+    
+    // Code SAT (Satisfaisant / Acquis)
+    if (v.includes('satisfaisant') || 
+        v.includes('capacité à comprendre les documents') || 
+        v.includes('maîtrise correcte') || 
+        v.includes('maîtrise partielle ou totale')) return 'sat';
+        
+    // Code FRA (Fragile / En cours d'acquisition)
+    if (v.includes('fragile') || 
+        v.includes('maîtrise insuffisante')) return 'fra';
+        
+    // Code BES (À besoins / Non acquis)
+    if (v.includes('besoins') || 
+        v.includes('besoin de consolider') || 
+        v.includes('difficulté détectée')) return 'bes';
+        
+    // Code PDR (Pas de restitution / Absent)
+    if (v.includes('pas de restitution') || 
+        v === 'absent' || 
+        v === 'absente' || 
+        v === 'non renseigné') return 'pdr';
+    
+    return null;
+}
+
+
+/**
+ * NOUVEAU HELPER CENTRAL : Génère le code HTML d'une cellule de résultat.
+ */
+function getResultCellHtml(deppRow, compColName, isPdf = false) {
+    if (!deppRow) return `<td class="res-cell bg-none" title="Donnée manquante">-</td>`;
+    
+    const scoreKey = parseDeppValue(deppRow[compColName]);
+    let displayTxt = "-"; let bgClass = "bg-none"; let fullText = "Non renseigné";
+    
+    if (scoreKey === 'sat') { displayTxt = isPdf ? "Sat" : "Sat."; bgClass = "bg-sat"; fullText = "Satisfaisant"; }
+    else if (scoreKey === 'fra') { displayTxt = isPdf ? "Frag" : "Fra."; bgClass = "bg-fra"; fullText = "Fragile"; }
+    else if (scoreKey === 'bes') { displayTxt = isPdf ? "Bes" : "Bes."; bgClass = "bg-bes"; fullText = "À besoins"; }
+    else if (scoreKey === 'pdr') { displayTxt = isPdf ? "PdR" : "PdR."; bgClass = "bg-pdr"; fullText = "Pas de restitution"; }
+    else if (scoreKey === 'nc') { displayTxt = "N.C."; bgClass = "bg-none"; fullText = "Non concerné (Parcours adaptatif)"; }
+    
+    return `<td class="res-cell ${bgClass}" title="${fullText}">${displayTxt}</td>`;
+}
+/**
+ * Vérifie si la DEPP contient des onglets Pro/CAP et si Pronote est chargé.
+ * Si oui, et si aucun mapping n'a été fait, lève la modale.
+ */
+function checkVocationalMapping() {
+    if (!appData.fichiers.depp || !appData.fichiers.eleves) return;
+    
+    let hasPro = false, hasCap = false;
+    Object.keys(appData.fichiers.depp).forEach(sheet => {
+        if (/2PRO/i.test(sheet)) hasPro = true;
+        if (/LINU/i.test(sheet)) hasCap = true;
+    });
+
+    if (hasPro || hasCap) {
+        // Vérifie si un mapping existe déjà pour ne pas harceler l'utilisateur
+        const existingMappings = Object.values(appData.state.classMappings || {});
+        if (!existingMappings.includes('2PRO') && !existingMappings.includes('1CAP')) {
+            openClassMappingModal(hasPro, hasCap);
+        }
+    }
+}
+
+function openClassMappingModal(hasPro, hasCap) {
+    const container = document.getElementById('mapping-class-list');
+    container.innerHTML = '';
+    
+    // Extraction des classes uniques depuis l'annuaire (Pronote)
+    const classes = new Set();
+    appData.fichiers.eleves.forEach(el => {
+        const c = String(el['Classe'] || el['Lib. Structure'] || "").trim();
+        const type = String(el['Type Structure'] || "").trim().toUpperCase();
+        if (c && (type === 'D' || type === 'C' || type === 'DIV' || type === '')) classes.add(c);
+    });
+
+    Array.from(classes).sort().forEach(c => {
+        const is2Pro = appData.state.classMappings[c] === '2PRO' ? 'selected' : '';
+        const is1Cap = appData.state.classMappings[c] === '1CAP' ? 'selected' : '';
+        
+        let optionsHtml = `<option value="">-- Voie standard / Non concerné --</option>`;
+        if (hasPro) optionsHtml += `<option value="2PRO" ${is2Pro}>2nde Professionnelle (2PRO)</option>`;
+        if (hasCap) optionsHtml += `<option value="1CAP" ${is1Cap}>1ère année de CAP (1CAP)</option>`;
+
+        container.innerHTML += `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #fff; border: 1px solid #ccc; border-radius: 4px;">
+                <strong style="font-size: 1rem;">${c}</strong>
+                <select class="select-class-mapping" data-class="${c}" style="padding: 5px; border-radius: 4px; border: 1px solid #0056b3;">
+                    ${optionsHtml}
+                </select>
+            </div>
+        `;
+    });
+
+    document.getElementById('modal-class-mapping').classList.add('visible');
+}
+
+// Écouteur pour la sauvegarde du mapping
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('btn-save-mapping').addEventListener('click', () => {
+        document.querySelectorAll('.select-class-mapping').forEach(select => {
+            const c = select.getAttribute('data-class');
+            const val = select.value;
+            if (val) {
+                appData.state.classMappings[c] = val;
+            } else {
+                delete appData.state.classMappings[c];
+            }
+        });
+        document.getElementById('modal-class-mapping').classList.remove('visible');
+        
+        // Rafraîchissement préventif des UI si actives
+        if (document.getElementById('view-results').classList.contains('active')) populateClassDropdown();
+        if (document.getElementById('view-stat-etab').classList.contains('active')) checkAndRenderStats();
+    });
+});
+
         /**
          * Construit dynamiquement la Regex pour trouver le bon onglet DEPP.
          * Gère l'exception des classes de 2nde GT.
          * @param {string} level - Le niveau issu de l'interface (ex: '6' ou '2')
          * @returns {RegExp}
          */
-        function getSheetRegex(level) {
-            const sheetLevel = level === '2' ? '2GT' : level;
-            return new RegExp(`^\\d{2}EVA${sheetLevel}_(.*)$`, 'i');
-        }
+/**
+ * Renvoie le label propre pour l'affichage (PDF et UI)
+ */
+function getLevelLabel(level) {
+    if (level === '2') return '2nde GT';
+    if (level === '2PRO') return '2nde Pro';
+    if (level === '1CAP') return '1ère CAP';
+    return level + 'ème';
+}
+
+/**
+ * Construit dynamiquement la Regex pour trouver le bon onglet DEPP.
+ * Gère les exceptions 2nde GT, 2nde Pro et 1ère CAP (LINU).
+ */
+function getSheetRegex(level) {
+    if (level === '1CAP') {
+        return new RegExp(`^\\d{2}LINU_(.*)$`, 'i');
+    }
+    const sheetLevel = level === '2' ? '2GT' : level;
+    return new RegExp(`^\\d{2}EVA${sheetLevel}_(.*)$`, 'i');
+}
 
         document.addEventListener('DOMContentLoaded', () => {
             initNavigation();
@@ -1378,167 +1572,324 @@
             }
         }
 
-        // Fonction maîtresse pour construire le tableau des écoles d'origine (Renvoie un tableau de pages HTML pour l'export PDF)
-        function buildOriginTableHTML(selectedOrigin, level, selectedSubject, isPdf = false, epleName = "", currentYear = "") {
-            const depp = appData.fichiers.depp;
-            const eleves = appData.fichiers.eleves;
+ function buildOriginTableHTML(selectedOrigin, level, selectedSubject, isPdf = false, epleName = "", currentYear = "") {
+    const depp = appData.fichiers.depp;
+    const eleves = appData.fichiers.eleves;
 
-            const regexSheet = getSheetRegex(level);
-            const sheetsToRead = [];
+    const regexSheet = getSheetRegex(level);
+    const sheetsToRead = [];
+    
+    Object.keys(depp).forEach(sheetName => {
+        const match = sheetName.match(regexSheet);
+        if (match && !sheetName.toLowerCase().includes('note')) {
+            const matiere = match[1].toLowerCase();
+            const isFr = matiere.includes('fran') || matiere.includes('litt');
+            const isMath = matiere.includes('math') || matiere.includes('numé') || matiere.includes('nume');                    
             
-            Object.keys(depp).forEach(sheetName => {
-                const match = sheetName.match(regexSheet);
-                if (match && !sheetName.toLowerCase().includes('note')) {
-                    const matiere = match[1].toLowerCase();
-                    const isFr = matiere.includes('francais') || matiere.includes('français');
-                    const isMath = matiere.includes('mathematiques') || matiere.includes('mathématiques');
-                    
-                    if ((selectedSubject === 'fr' || selectedSubject === 'both') && isFr) sheetsToRead.push({ id: sheetName, title: 'Français', data: depp[sheetName] });
-                    if ((selectedSubject === 'math' || selectedSubject === 'both') && isMath) sheetsToRead.push({ id: sheetName, title: 'Mathématiques', data: depp[sheetName] });
-                }
-            });
-
-            if (sheetsToRead.length === 0) return isPdf ? [] : `<div class="no-data">Aucune donnée trouvée dans la DEPP pour le niveau ${level === '2' ? '2nde GT' : level + 'ème'}.</div>`;
-
-            const originStudents = [];
-            eleves.forEach(el => {
-                const key = normalizeKey(el['Nom de famille'], el['Prénom']);
-                const classe = String(el['Classe'] || el['Lib. Structure'] || "").trim();
-                const type = String(el['Type Structure'] || "").trim().toUpperCase();
-                
-                let origine = appData.pronoteMap.has(key) 
-                    ? appData.pronoteMap.get(key) 
-                    : String(el['Etablissement d\'origine'] || el["Etab. d'origine"] || el["Etab. Prec."] || "Non renseigné").trim();
-                
-                if (origine === selectedOrigin && classe.startsWith(level) && (type === 'D' || type === 'C' || type === 'DIV' || type === '')) {
-                    originStudents.push({ nomRaw: el['Nom de famille'], prenomRaw: el['Prénom'], classe: classe, key: key });
-                }
-            });
-            originStudents.sort((a, b) => a.nomRaw.localeCompare(b.nomRaw));
-
-            if(originStudents.length === 0) return isPdf ? [] : `<div class="info-data">Aucun élève trouvé pour cet établissement au niveau ${level === '2' ? '2nde GT' : level + 'ème'}.</div>`;
-
-            let theadHtml = `<thead><tr><th style="background-color:#fff; border:none; ${!isPdf ? 'z-index: 3; position: sticky; left:0; top:0;' : ''}"></th>`;
-            let allCompetences = [];
-            let compIndex = 1;
-            let legendItems = [];
-
-            sheetsToRead.forEach(sheetObj => {
-                const sampleRow = sheetObj.data[0] || {};
-                const compCols = Object.keys(sampleRow).slice(3).filter(col => !col.toLowerCase().includes('date'));
-                theadHtml += `<th colspan="${compCols.length}" class="subject-th">${sheetObj.title}</th>`;
-                
-                compCols.forEach(c => {
-                    const alias = `C${compIndex}`;
-                    allCompetences.push({ sheet: sheetObj, colName: c, alias: alias });
-                    if (isPdf) legendItems.push(`<div><strong style="color:var(--primary-color);">${alias}</strong> : ${c.replace(/\n/g, ' ')}</div>`);
-                    compIndex++;
-                });
-            });
-            
-            theadHtml += `</tr><tr><th class="student-name" style="white-space: normal; min-width: 140px; line-height: 1.3;">Élèves venant de :<br><strong style="font-size: 0.75rem; color: var(--primary-color); display: block; margin-top: 5px;">${selectedOrigin}</strong></th>`;
-            
-            allCompetences.forEach(comp => {
-                if (isPdf) {
-                    theadHtml += `<th class="vertical-th-pdf" style="font-weight: bold; font-size: 8.5px; padding: 5px 2px !important; width: 25px;">${comp.alias}</th>`;
-                } else {
-                    const titleClean = comp.colName.replace(/\n/g, ' - ');
-                    theadHtml += `<th class="vertical-th"><span title="${titleClean}">${titleClean}</span></th>`;
-                }
-            });
-            theadHtml += `</tr></thead>`;
-
-            let compLegendHtml = isPdf ? `<div style="font-size: 7.5px; text-align: left; margin-top: 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 10px; background: #fafafa; border: 1px solid #eee; border-radius: 4px;">${legendItems.join('')}</div>` : '';
-
-            const MAX_ROWS = isPdf ? 22 : 9999;
-            const chunks = [];
-            for (let i = 0; i < originStudents.length; i += MAX_ROWS) {
-                chunks.push(originStudents.slice(i, i + MAX_ROWS));
-            }
-
-            const tableClass = isPdf ? "pdf-compact-table" : "results-table";
-            
-            if (!isPdf) {
-                let finalHtml = `<div class="results-wrapper"><table class="${tableClass}">${theadHtml}<tbody>`;
-                chunks[0].forEach(student => {
-                    finalHtml += `<tr><td class="student-name">${student.nomRaw} ${student.prenomRaw} <br><small style="color:#777; font-weight:normal;">(${student.classe})</small></td>`;
-                    allCompetences.forEach(comp => {
-                        const deppRow = comp.sheet.data.find(r => normalizeKey(r['Nom élève'] || r['Nom de famille'] || r['Nom'], r['Prénom élève'] || r['Prénom']) === student.key);
-                        if (deppRow) {
-                            const valStr = String(deppRow[comp.colName] || "").toLowerCase().trim();
-                            let displayTxt = "-"; let bgClass = "bg-none"; let fullText = "Non renseigné";
-                            if (valStr.includes('satisfaisant')) { displayTxt = "Sat."; bgClass = "bg-sat"; fullText = "Satisfaisant"; }
-                            else if (valStr.includes('fragile')) { displayTxt = "Fra."; bgClass = "bg-fra"; fullText = "Fragile"; }
-                            else if (valStr.includes('besoins')) { displayTxt = "Bes."; bgClass = "bg-bes"; fullText = "À besoins"; }
-                            else if (valStr.includes('pas de restitution')) { displayTxt = "PdR."; bgClass = "bg-pdr"; fullText = "Pas de restitution"; }
-                            else if (valStr === 'absent' || valStr === 'absente') { displayTxt = "ABS"; fullText = "Absent"; }
-                            finalHtml += `<td class="res-cell ${bgClass}" title="${fullText}">${displayTxt}</td>`;
-                        } else {
-                            finalHtml += `<td class="res-cell bg-none" title="Donnée manquante">-</td>`;
-                        }
-                    });
-                    finalHtml += `</tr>`;
-                });
-                finalHtml += `</tbody></table></div>` + getMiniLegendHTML();
-                return finalHtml;
-            }
-
-            const pdfPagesHtml = [];
-            
-            chunks.forEach((chunk, chunkIndex) => {
-                let pageHtml = "";
-                let subjTitle = selectedSubject === 'both' ? "Français & Mathématiques" : (selectedSubject === 'fr' ? "Français" : "Mathématiques");
-                let titleSuffix = chunkIndex > 0 ? " (Suite)" : "";
-
-                pageHtml += `
-                    <div class="pdf-results-page" style="padding-top: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px;">
-                            <div>
-                                <h2 style="color: var(--bg-sidebar); margin: 0; font-size: 1.3rem;">Résultats - École d'origine (Niveau ${level === '2' ? '2nde GT' : level + 'ème'})${titleSuffix}</h2>
-                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">${epleName} - Année ${currentYear} - ${subjTitle}</p>
-                            </div>
-                            <div style="font-size: 0.8rem; font-weight: bold; display: flex; gap: 10px;">
-                                <span style="color: var(--color-sat);">Sat: Satisfaisant</span> |
-                                <span style="color: var(--color-fra);">Frag: Fragile</span> |
-                                <span style="color: var(--color-bes);">Bes: À besoins</span> |
-                                <span style="color: var(--color-pdr);">PdR: Pas de restitution</span>
-                            </div>
-                        </div>`;
-
-                pageHtml += `<table class="${tableClass}">${theadHtml}<tbody>`;
-
-                chunk.forEach(student => {
-                    pageHtml += `<tr><td class="student-name">${student.nomRaw} ${student.prenomRaw} <br><small style="color:#777; font-weight:normal;">(${student.classe})</small></td>`;
-                    allCompetences.forEach(comp => {
-                        const deppRow = comp.sheet.data.find(r => normalizeKey(r['Nom élève'] || r['Nom de famille'] || r['Nom'], r['Prénom élève'] || r['Prénom']) === student.key);
-
-                        if (deppRow) {
-                            const valStr = String(deppRow[comp.colName] || "").toLowerCase().trim();
-                            let displayTxt = "-"; let bgClass = "bg-none"; let fullText = "Non renseigné";
-                            
-                            if (valStr.includes('satisfaisant')) { displayTxt = "Sat"; bgClass = "bg-sat"; fullText = "Satisfaisant"; }
-                            else if (valStr.includes('fragile')) { displayTxt = "Frag"; bgClass = "bg-fra"; fullText = "Fragile"; }
-                            else if (valStr.includes('besoins')) { displayTxt = "Bes"; bgClass = "bg-bes"; fullText = "À besoins"; }
-                            else if (valStr.includes('pas de restitution')) { displayTxt = "PdR"; bgClass = "bg-pdr"; fullText = "Pas de restitution"; }
-                            else if (valStr === 'absent' || valStr === 'absente') { displayTxt = "ABS"; fullText = "Absent"; }
-
-                            pageHtml += `<td class="res-cell ${bgClass}" title="${fullText}">${displayTxt}</td>`;
-                        } else {
-                            pageHtml += `<td class="res-cell bg-none" title="Donnée manquante">-</td>`;
-                        }
-                    });
-                    pageHtml += `</tr>`;
-                });
-
-                pageHtml += `</tbody></table>`;
-                pageHtml += compLegendHtml;
-                pageHtml += `</div>`;
-                
-                pdfPagesHtml.push(pageHtml);
-            });
-
-            return pdfPagesHtml;
+            if ((selectedSubject === 'fr' || selectedSubject === 'both') && isFr) sheetsToRead.push({ id: sheetName, title: 'Français', data: depp[sheetName] });
+            if ((selectedSubject === 'math' || selectedSubject === 'both') && isMath) sheetsToRead.push({ id: sheetName, title: 'Mathématiques', data: depp[sheetName] });
         }
+    });
+
+    if (sheetsToRead.length === 0) return isPdf ? [] : `<div class="no-data">Aucune donnée trouvée dans la DEPP pour le niveau concerné.</div>`;
+
+    const originStudents = [];
+    eleves.forEach(el => {
+        const key = normalizeKey(el['Nom de famille'], el['Prénom']);
+        const classe = String(el['Classe'] || el['Lib. Structure'] || "").trim();
+        const type = String(el['Type Structure'] || "").trim().toUpperCase();
+        
+        let origine = appData.pronoteMap.has(key) ? appData.pronoteMap.get(key) : String(el['Etablissement d\'origine'] || el["Etab. d'origine"] || el["Etab. Prec."] || "Non renseigné").trim();
+        
+        // On vérifie le niveau de la classe via le helper
+        if (origine === selectedOrigin && getLevelFromClass(classe) === level && (type === 'D' || type === 'C' || type === 'DIV' || type === '')) {
+            originStudents.push({ nomRaw: el['Nom de famille'], prenomRaw: el['Prénom'], classe: classe, key: key });
+        }
+    });
+    originStudents.sort((a, b) => a.nomRaw.localeCompare(b.nomRaw));
+
+    if(originStudents.length === 0) return isPdf ? [] : `<div class="info-data">Aucun élève trouvé pour cet établissement à ce niveau.</div>`;
+
+    let theadHtml = `<thead><tr><th style="background-color:#fff; border:none; ${!isPdf ? 'z-index: 3; position: sticky; left:0; top:0;' : ''}"></th>`;
+    let allCompetences = [];
+    let compIndex = 1;
+    let legendItems = [];
+
+    sheetsToRead.forEach(sheetObj => {
+        const sampleRow = sheetObj.data[0] || {};
+        const compCols = Object.keys(sampleRow).slice(3).filter(col => !col.toLowerCase().includes('date'));
+        theadHtml += `<th colspan="${compCols.length}" class="subject-th">${sheetObj.title}</th>`;
+        
+        compCols.forEach(c => {
+            const alias = `C${compIndex}`;
+            allCompetences.push({ sheet: sheetObj, colName: c, alias: alias });
+            if (isPdf) legendItems.push(`<div><strong style="color:var(--primary-color);">${alias}</strong> : ${c.replace(/\n/g, ' ')}</div>`);
+            compIndex++;
+        });
+    });
+    
+    theadHtml += `</tr><tr><th class="student-name" style="white-space: normal; min-width: 140px; line-height: 1.3;">Élèves venant de :<br><strong style="font-size: 0.75rem; color: var(--primary-color); display: block; margin-top: 5px;">${selectedOrigin}</strong></th>`;
+    
+    allCompetences.forEach(comp => {
+        if (isPdf) {
+            theadHtml += `<th class="vertical-th-pdf" style="font-weight: bold; font-size: 8.5px; padding: 5px 2px !important; width: 25px;">${comp.alias}</th>`;
+        } else {
+            const titleClean = comp.colName.replace(/\n/g, ' - ');
+            theadHtml += `<th class="vertical-th"><span title="${titleClean}">${titleClean}</span></th>`;
+        }
+    });
+    theadHtml += `</tr></thead>`;
+
+    let compLegendHtml = isPdf ? `<div style="font-size: 7.5px; text-align: left; margin-top: 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 10px; background: #fafafa; border: 1px solid #eee; border-radius: 4px;">${legendItems.join('')}</div>` : '';
+
+    const MAX_ROWS = isPdf ? 22 : 9999;
+    const chunks = [];
+    for (let i = 0; i < originStudents.length; i += MAX_ROWS) {
+        chunks.push(originStudents.slice(i, i + MAX_ROWS));
+    }
+
+    const tableClass = isPdf ? "pdf-compact-table" : "results-table";
+    
+    if (!isPdf) {
+        let finalHtml = `<div class="results-wrapper"><table class="${tableClass}">${theadHtml}<tbody>`;
+        chunks[0].forEach(student => {
+            finalHtml += `<tr><td class="student-name">${student.nomRaw} ${student.prenomRaw} <br><small style="color:#777; font-weight:normal;">(${student.classe})</small></td>`;
+            allCompetences.forEach(comp => {
+                const deppRow = comp.sheet.data.find(r => normalizeKey(r['Nom élève'] || r['Nom de famille'] || r['Nom'], r['Prénom élève'] || r['Prénom']) === student.key);
+                finalHtml += getResultCellHtml(deppRow, comp.colName, isPdf);
+            });
+            finalHtml += `</tr>`;
+        });
+        finalHtml += `</tbody></table></div>` + getMiniLegendHTML();
+        return finalHtml;
+    }
+
+    const pdfPagesHtml = [];
+    chunks.forEach((chunk, chunkIndex) => {
+        let pageHtml = "";
+        let subjTitle = selectedSubject === 'both' ? "Français & Mathématiques" : (selectedSubject === 'fr' ? "Français" : "Mathématiques");
+        let titleSuffix = chunkIndex > 0 ? " (Suite)" : "";
+
+        pageHtml += `
+            <div class="pdf-results-page" style="padding-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px;">
+                    <div>
+                        <h2 style="color: var(--bg-sidebar); margin: 0; font-size: 1.3rem;">Résultats - École d'origine ${titleSuffix}</h2>
+                        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">${epleName} - Année ${currentYear} - ${subjTitle}</p>
+                    </div>
+                </div>`;
+
+        pageHtml += `<table class="${tableClass}">${theadHtml}<tbody>`;
+
+        chunk.forEach(student => {
+            pageHtml += `<tr><td class="student-name">${student.nomRaw} ${student.prenomRaw} <br><small style="color:#777; font-weight:normal;">(${student.classe})</small></td>`;
+            allCompetences.forEach(comp => {
+                const deppRow = comp.sheet.data.find(r => normalizeKey(r['Nom élève'] || r['Nom de famille'] || r['Nom'], r['Prénom élève'] || r['Prénom']) === student.key);
+                pageHtml += getResultCellHtml(deppRow, comp.colName, isPdf);
+            });
+            pageHtml += `</tr>`;
+        });
+
+        pageHtml += `</tbody></table>`;
+        pageHtml += compLegendHtml;
+        pageHtml += `</div>`;
+        pdfPagesHtml.push(pageHtml);
+    });
+
+    return pdfPagesHtml;
+}    
+
+/**
+ * Génère et télécharge un export PDF global regroupant les résultats par classe.
+ */
+async function generateClassResultsPDF(selectedClasses, subject) {
+    const btn = document.getElementById('btn-open-export-results');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "⏳ Génération en cours...";
+    btn.disabled = true;
+
+    const container = document.getElementById('pdf-export-container');
+    container.style.display = 'block'; 
+
+    const epleInput = document.getElementById('input-etab-name').value;
+    const epleName = epleInput.trim() !== "" ? epleInput : "Établissement";
+    const currentYear = "2026-2027"; 
+
+    try {
+        const finalDoc = await PDFLib.PDFDocument.create();
+        const opt = {
+            margin:       [10, 10, 10, 10], 
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, logging: false },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+            pagebreak:    { mode: ['css', 'legacy'] } 
+        };
+
+        for (const cls of selectedClasses) {
+            btn.innerHTML = `⏳ Génération classe ${cls}...`;
+            const classHtml = buildClassTableHTML(cls, subject, true, epleName, currentYear);
+            
+            if (classHtml.trim() !== '') {
+                container.innerHTML = classHtml;
+                const pdfBlob = await html2pdf().set(opt).from(container).outputPdf('blob');
+                const tempDoc = await PDFLib.PDFDocument.load(await pdfBlob.arrayBuffer());
+                
+                const pages = await finalDoc.copyPages(tempDoc, tempDoc.getPageIndices());
+                pages.forEach(p => finalDoc.addPage(p));
+            }
+        }
+
+        btn.innerHTML = "⏳ Finalisation du document...";
+        const pdfBytes = await finalDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Resultats_Classes_${epleName.replace(/\s+/g, '_')}.pdf`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+    } catch (e) {
+        console.error("Erreur critique lors de l'export des classes:", e);
+        alert("Une erreur technique est survenue lors de l'exportation des résultats par classe.");
+    } finally {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+/**
+ * Construit le HTML du tableau de résultats nominatifs pour une classe donnée.
+ * Gère indépendamment le rendu à l'écran (tableau continu) et le rendu PDF (pagination).
+ */
+function buildClassTableHTML(selectedClass, selectedSubject, isPdf = false, epleName = "", currentYear = "") {
+    const level = getLevelFromClass(selectedClass); 
+    const depp = appData.fichiers.depp;
+    const eleves = appData.fichiers.eleves;
+
+    const regexSheet = getSheetRegex(level);
+    const sheetsToRead = [];
+    
+    Object.keys(depp).forEach(sheetName => {
+        const match = sheetName.match(regexSheet);
+        if (match && !sheetName.toLowerCase().includes('note')) {
+            const matiere = match[1].toLowerCase();
+            const isFr = matiere.includes('fran') || matiere.includes('litt');
+            const isMath = matiere.includes('math') || matiere.includes('numé') || matiere.includes('nume');
+            
+            if ((selectedSubject === 'fr' || selectedSubject === 'both') && isFr) sheetsToRead.push({ id: sheetName, title: 'Français', data: depp[sheetName] });
+            if ((selectedSubject === 'math' || selectedSubject === 'both') && isMath) sheetsToRead.push({ id: sheetName, title: 'Mathématiques', data: depp[sheetName] });
+        }
+    });
+
+    if (sheetsToRead.length === 0) return `<div class="no-data">Aucune donnée trouvée dans la DEPP pour la classe sélectionnée.</div>`;
+
+    const classStudents = [];
+    eleves.forEach(el => {
+        const classe = String(el['Classe'] || el['Lib. Structure'] || "").trim();
+        const type = String(el['Type Structure'] || "").trim().toUpperCase();
+        if (classe === selectedClass && (type === 'D' || type === 'C' || type === 'DIV' || type === '')) {
+            classStudents.push({ nomRaw: el['Nom de famille'], prenomRaw: el['Prénom'], key: normalizeKey(el['Nom de famille'], el['Prénom']) });
+        }
+    });
+    classStudents.sort((a, b) => a.nomRaw.localeCompare(b.nomRaw));
+
+    if (classStudents.length === 0) return `<div class="info-data">Aucun élève trouvé pour cette classe dans l'annuaire.</div>`;
+
+    let theadHtml = `<thead><tr><th style="background-color:#fff; border:none; ${!isPdf ? 'z-index: 3; position: sticky; left:0; top:0;' : ''}"></th>`;
+    let allCompetences = [];
+    let compIndex = 1;
+    let legendItems = [];
+
+    // Boucle 1 : Construction de l'en-tête
+    sheetsToRead.forEach(sheetObj => {
+        const sampleRow = sheetObj.data[0] || {};
+        const compCols = Object.keys(sampleRow).slice(3).filter(col => !col.toLowerCase().includes('date'));                
+        compCols.forEach(c => {
+            const alias = `C${compIndex}`;
+            allCompetences.push({ sheet: sheetObj, colName: c, alias: alias });
+            if (isPdf) legendItems.push(`<div><strong style="color:var(--primary-color);">${alias}</strong> : ${c.replace(/\n/g, ' ')}</div>`);
+            compIndex++;
+        });
+    });
+    
+    theadHtml += `</tr><tr><th class="student-name">Élèves de ${selectedClass}</th>`;
+    
+    allCompetences.forEach(comp => {
+        if (isPdf) {
+            theadHtml += `<th class="vertical-th-pdf" style="font-weight: bold; font-size: 8.5px; padding: 5px 2px !important; width: 25px;">${comp.alias}</th>`;
+        } else {
+            const titleClean = comp.colName.replace(/\n/g, ' - ');
+            theadHtml += `<th class="vertical-th"><span title="${titleClean}">${titleClean}</span></th>`;
+        }
+    });
+    theadHtml += `</tr></thead>`;
+
+    const tableClass = isPdf ? "pdf-compact-table" : "results-table";
+
+    // BRANCHE 1 : RENDU ÉCRAN (Tableau continu)
+    if (!isPdf) {
+        let screenHtml = `<div class="results-wrapper"><table class="${tableClass}">${theadHtml}<tbody>`;
+        
+        classStudents.forEach(student => {
+            screenHtml += `<tr><td class="student-name">${student.nomRaw} ${student.prenomRaw}</td>`;
+            allCompetences.forEach(comp => {
+                const deppRow = comp.sheet.data.find(r => normalizeKey(r['Nom élève'] || r['Nom de famille'] || r['Nom'], r['Prénom élève'] || r['Prénom']) === student.key);
+                screenHtml += getResultCellHtml(deppRow, comp.colName, false);
+            });
+            screenHtml += `</tr>`;
+        });
+        
+        screenHtml += `</tbody></table></div>` + getMiniLegendHTML();
+        return screenHtml;
+    }
+
+    // BRANCHE 2 : RENDU PDF (Pagination et Chunks)
+    let compLegendHtml = `<div style="font-size: 7.5px; text-align: left; margin-top: 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 10px; background: #fafafa; border: 1px solid #eee; border-radius: 4px;">${legendItems.join('')}</div>`;
+    const MAX_ROWS = 22;
+    const chunks = [];
+    for (let i = 0; i < classStudents.length; i += MAX_ROWS) {
+        chunks.push(classStudents.slice(i, i + MAX_ROWS));
+    }
+
+    let pdfHtml = "";
+    chunks.forEach((chunk, chunkIndex) => {
+        if (chunkIndex > 0) pdfHtml += `<div class="html2pdf__page-break" style="page-break-before: always; clear: both;"></div>`;
+        let subjTitle = selectedSubject === 'both' ? "Français & Mathématiques" : (selectedSubject === 'fr' ? "Français" : "Mathématiques");
+        let titleSuffix = chunkIndex > 0 ? " (Suite)" : "";
+
+        pdfHtml += `
+            <div class="pdf-results-page" style="padding-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px;">
+                    <div>
+                        <h2 style="color: var(--bg-sidebar); margin: 0; font-size: 1.5rem;">Résultats Nominatifs - Classe de ${selectedClass}${titleSuffix}</h2>
+                        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">${epleName} - Année ${currentYear} - ${subjTitle}</p>
+                    </div>
+                </div>`;
+
+        pdfHtml += `<table class="${tableClass}">${theadHtml}<tbody>`;
+
+        chunk.forEach(student => {
+            pdfHtml += `<tr><td class="student-name">${student.nomRaw} ${student.prenomRaw}</td>`;
+            allCompetences.forEach(comp => {
+                const deppRow = comp.sheet.data.find(r => normalizeKey(r['Nom élève'] || r['Nom de famille'] || r['Nom'], r['Prénom élève'] || r['Prénom']) === student.key);
+                pdfHtml += getResultCellHtml(deppRow, comp.colName, true);
+            });
+            pdfHtml += `</tr>`;
+        });
+
+        pdfHtml += `</tbody></table>`;
+        pdfHtml += compLegendHtml;
+        pdfHtml += `</div>`;
+    });
+
+    return pdfHtml;
+}
+
 
         // --- INIT EXPORT PDF (RÉSULTATS PAR CLASSE) ---
         function initResultsPdfExport() {
@@ -1625,176 +1976,7 @@
             });
         }
 
-        function generateClassResultsPDF(selectedClasses, subject) {
-            const btn = document.getElementById('btn-open-export-results');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = "⏳ Génération...";
-            btn.disabled = true;
 
-            const container = document.getElementById('pdf-export-container');
-            container.innerHTML = ''; 
-            container.style.display = 'block'; 
-
-            const epleInput = document.getElementById('input-etab-name').value;
-            const epleName = epleInput.trim() !== "" ? epleInput : "Collège de l'Estey";
-            const currentYear = "2026-2027"; 
-
-            let html = '';
-
-            selectedClasses.forEach((cls, index) => {
-                if (index > 0) {
-                    html += `<div class="html2pdf__page-break" style="page-break-before: always; clear: both;"></div>`;
-                }
-                html += buildClassTableHTML(cls, subject, true, epleName, currentYear);
-            });
-
-            container.innerHTML = html;
-
-            const opt = {
-                margin:       [10, 10, 10, 10], 
-                filename:     `Resultats_Classes_${epleName.replace(/\s+/g, '_')}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
-                pagebreak:    { mode: ['css', 'legacy'] } 
-            };
-
-            html2pdf().set(opt).from(container).save().then(() => {
-                container.style.display = 'none';
-                container.innerHTML = '';
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-        }
-
-        function buildClassTableHTML(selectedClass, selectedSubject, isPdf = false, epleName = "", currentYear = "") {
-            const level = selectedClass.charAt(0);
-            const depp = appData.fichiers.depp;
-            const eleves = appData.fichiers.eleves;
-
-            const regexSheet = getSheetRegex(level);
-            const sheetsToRead = [];
-            
-            Object.keys(depp).forEach(sheetName => {
-                const match = sheetName.match(regexSheet);
-                if (match && !sheetName.toLowerCase().includes('note')) {
-                    const matiere = match[1].toLowerCase();
-                    const isFr = matiere.includes('francais') || matiere.includes('français');
-                    const isMath = matiere.includes('mathematiques') || matiere.includes('mathématiques');
-                    
-                    if ((selectedSubject === 'fr' || selectedSubject === 'both') && isFr) sheetsToRead.push({ id: sheetName, title: 'Français', data: depp[sheetName] });
-                    if ((selectedSubject === 'math' || selectedSubject === 'both') && isMath) sheetsToRead.push({ id: sheetName, title: 'Mathématiques', data: depp[sheetName] });
-                }
-            });
-
-            if (sheetsToRead.length === 0) return `<div class="no-data">Aucune donnée trouvée dans la DEPP pour le niveau ${level === '2' ? '2nde GT' : level + 'ème'}.</div>`;
-
-            const classStudents = [];
-            eleves.forEach(el => {
-                const classe = String(el['Classe'] || el['Lib. Structure'] || "").trim();
-                const type = String(el['Type Structure'] || "").trim().toUpperCase();
-                if (classe === selectedClass && (type === 'D' || type === 'C' || type === 'DIV' || type === '')) {
-                    classStudents.push({ nomRaw: el['Nom de famille'], prenomRaw: el['Prénom'], key: normalizeKey(el['Nom de famille'], el['Prénom']) });
-                }
-            });
-            classStudents.sort((a, b) => a.nomRaw.localeCompare(b.nomRaw));
-
-            let theadHtml = `<thead><tr><th style="background-color:#fff; border:none; ${!isPdf ? 'z-index: 3; position: sticky; left:0; top:0;' : ''}"></th>`;
-            let allCompetences = [];
-            let compIndex = 1;
-            let legendItems = [];
-
-            sheetsToRead.forEach(sheetObj => {
-                const sampleRow = sheetObj.data[0] || {};
-                const compCols = Object.keys(sampleRow).slice(3).filter(col => !col.toLowerCase().includes('date'));                
-                compCols.forEach(c => {
-                    const alias = `C${compIndex}`;
-                    allCompetences.push({ sheet: sheetObj, colName: c, alias: alias });
-                    if (isPdf) legendItems.push(`<div><strong style="color:var(--primary-color);">${alias}</strong> : ${c.replace(/\n/g, ' ')}</div>`);
-                    compIndex++;
-                });
-            });
-            
-            theadHtml += `</tr><tr><th class="student-name">Élèves de ${selectedClass}</th>`;
-            
-            allCompetences.forEach(comp => {
-                if (isPdf) {
-                    theadHtml += `<th class="vertical-th-pdf" style="font-weight: bold; font-size: 8.5px; padding: 5px 2px !important; width: 25px;">${comp.alias}</th>`;
-                } else {
-                    const titleClean = comp.colName.replace(/\n/g, ' - ');
-                    theadHtml += `<th class="vertical-th"><span title="${titleClean}">${titleClean}</span></th>`;
-                }
-            });
-            theadHtml += `</tr></thead>`;
-
-            let compLegendHtml = isPdf ? `<div style="font-size: 7.5px; text-align: left; margin-top: 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 10px; background: #fafafa; border: 1px solid #eee; border-radius: 4px;">${legendItems.join('')}</div>` : '';
-
-            const MAX_ROWS = isPdf ? 22 : 9999;
-            const chunks = [];
-            for (let i = 0; i < classStudents.length; i += MAX_ROWS) {
-                chunks.push(classStudents.slice(i, i + MAX_ROWS));
-            }
-
-            const tableClass = isPdf ? "pdf-compact-table" : "results-table";
-            let finalHtml = isPdf ? "" : `<div class="results-wrapper">`;
-
-            chunks.forEach((chunk, chunkIndex) => {
-                if (isPdf) {
-                    if (chunkIndex > 0) finalHtml += `<div class="html2pdf__page-break" style="page-break-before: always; clear: both;"></div>`;
-                    
-                    let subjTitle = selectedSubject === 'both' ? "Français & Mathématiques" : (selectedSubject === 'fr' ? "Français" : "Mathématiques");
-                    let titleSuffix = chunkIndex > 0 ? " (Suite)" : "";
-
-                    finalHtml += `
-                        <div class="pdf-results-page" style="padding-top: 10px;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px;">
-                                <div>
-                                    <h2 style="color: var(--bg-sidebar); margin: 0; font-size: 1.5rem;">Résultats Nominatifs - Classe de ${selectedClass}${titleSuffix}</h2>
-                                    <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">${epleName} - Année ${currentYear} - ${subjTitle}</p>
-                                </div>
-                                <div style="font-size: 0.8rem; font-weight: bold; display: flex; gap: 10px;">
-                                    <span style="color: var(--color-sat);">Sat: Satisfaisant</span> |
-                                    <span style="color: var(--color-fra);">Frag: Fragile</span> |
-                                    <span style="color: var(--color-bes);">Bes: À besoins</span> |
-                                    <span style="color: var(--color-pdr);">PdR: Pas de restitution</span>
-                                </div>
-                            </div>`;
-                }
-
-                finalHtml += `<table class="${tableClass}">${theadHtml}<tbody>`;
-
-                chunk.forEach(student => {
-                    finalHtml += `<tr><td class="student-name">${student.nomRaw} ${student.prenomRaw}</td>`;
-                    allCompetences.forEach(comp => {
-                        const deppRow = comp.sheet.data.find(r => normalizeKey(r['Nom élève'] || r['Nom de famille'] || r['Nom'], r['Prénom élève'] || r['Prénom']) === student.key);
-                        if (deppRow) {
-                            const valStr = String(deppRow[comp.colName] || "").toLowerCase().trim();
-                            let displayTxt = "-"; let bgClass = "bg-none"; let fullText = "Non renseigné";
-                            
-                            if (valStr.includes('satisfaisant')) { displayTxt = "Sat"; bgClass = "bg-sat"; fullText = "Satisfaisant"; }
-                            else if (valStr.includes('fragile')) { displayTxt = "Frag"; bgClass = "bg-fra"; fullText = "Fragile"; }
-                            else if (valStr.includes('besoins')) { displayTxt = "Bes"; bgClass = "bg-bes"; fullText = "À besoins"; }
-                            else if (valStr.includes('pas de restitution')) { displayTxt = "PdR"; bgClass = "bg-pdr"; fullText = "Pas de restitution"; }
-                            else if (valStr === 'absent' || valStr === 'absente') { displayTxt = "ABS"; fullText = "Absent"; }
-
-                            finalHtml += `<td class="res-cell ${bgClass}" title="${fullText}">${displayTxt}</td>`;
-                        } else {
-                            finalHtml += `<td class="res-cell bg-none" title="Donnée manquante">-</td>`;
-                        }
-                    });
-                    finalHtml += `</tr>`;
-                });
-
-                finalHtml += `</tbody></table>`;
-                if (isPdf) {
-                    finalHtml += compLegendHtml;
-                    finalHtml += `</div>`;
-                }
-            });
-
-            if (!isPdf) finalHtml += `</div>` + getMiniLegendHTML();
-            return finalHtml;
-        }
 
         function renderClassResults() {
             const renderArea = document.getElementById('results-render-area');
@@ -1876,7 +2058,7 @@
                     </div>
             `;
 
-            ['2', '6', '5', '4'].forEach((level) => {
+['2', '2PRO', '1CAP', '6', '5', '4'].forEach((level) => {
                 appData.state.selectedLevel = level;
                 const statsData = generateStatisticsCube();
 
@@ -2193,22 +2375,11 @@
                         const zip = new JSZip();
                         const mailMergeData = [];
                         
-                        const emailMap = new Map();
-                        if (appData.fichiers.eleves) {
-                            appData.fichiers.eleves.forEach(el => {
-                                const k = normalizeKey(el['Nom de famille'], el['Prénom']);
-                                if (k) {
-                                    let mail1 = "", mail2 = "";
-                                    Object.keys(el).forEach(col => {
-                                        const lowerCol = col.toLowerCase();
-                                        if (lowerCol.includes('mail') || lowerCol.includes('courriel')) {
-                                            if (!mail1) mail1 = el[col];
-                                            else if (!mail2) mail2 = el[col];
-                                        }
-                                    });
-                                    emailMap.set(k, { mail1, mail2 });
-                                }
-                            });
+                        // CORRECTION : On utilise le dictionnaire Siècle global
+                        const emailMap = appData.emailMap || new Map();
+                        
+                        if (emailMap.size === 0) {
+                            console.warn("Attention : Le dictionnaire d'e-mails est vide. Le fichier Siècle a-t-il été importé ?");
                         }
 
                         for (let key of sortedKeys) {
@@ -2226,6 +2397,7 @@
                             const cleanFileName = `${cls} - ${n} ${p}.pdf`.replace(/[\\/:*?"<>|]/g, "_");
                             zip.file(cleanFileName, pdfBytes);
 
+                            // L'interrogation de l'annuaire Siècle se fait ici
                             const emails = emailMap.get(normalizeKey(n, p)) || { mail1: "", mail2: "" };
                             mailMergeData.push({
                                 "Classe": cls,
@@ -2361,6 +2533,8 @@
                 if (document.getElementById('view-results-origin').classList.contains('active')) populateOriginDropdown();
                 if (document.getElementById('view-rapport').classList.contains('active')) populateRapportOriginsList();
                 
+				// Déclencheur après l'import DEPP
+checkVocationalMapping();
             } catch (error) { 
                 alert("Erreur lors de la lecture du fichier. Assurez-vous qu'il s'agit d'un fichier Excel valide."); 
                 console.error(error);
@@ -2449,7 +2623,9 @@
                 } else {
                     feedback.style.color = 'var(--danger-color)';
                     feedback.innerText = "Erreur de lecture : aucune donnée exploitable trouvée.";
-                }
+                // Déclencheur après l'import Pronote
+checkVocationalMapping();
+}
             });
         }
 
@@ -2498,110 +2674,95 @@
         }
 
         function renderOriginResults() {
-            const renderArea = document.getElementById('results-origin-render-area');
-            const level = document.getElementById('select-level-results-origin').value;
-            const selectedOrigin = document.getElementById('select-origin-results').value;
-            const selectedSubject = document.querySelector('input[name="results-origin-subject"]:checked').value;
-            
-            if (!appData.fichiers.eleves || !appData.fichiers.depp) {
-                renderArea.innerHTML = '<div class="no-data">Veuillez d\'abord importer les fichiers de données (Configuration).</div>';
-                return;
-            }
-            if (!selectedOrigin) {
-                renderArea.innerHTML = '<div class="info-data">Veuillez sélectionner un établissement dans le menu déroulant.</div>';
-                return;
-            }
+    const renderArea = document.getElementById('results-origin-render-area');
+    const level = document.getElementById('select-level-results-origin').value;
+    const selectedOrigin = document.getElementById('select-origin-results').value;
+    const selectedSubject = document.querySelector('input[name="results-origin-subject"]:checked').value;
+    
+    if (!appData.fichiers.eleves || !appData.fichiers.depp) {
+        renderArea.innerHTML = '<div class="no-data">Veuillez d\'abord importer les fichiers de données (Configuration).</div>';
+        return;
+    }
+    if (!selectedOrigin) {
+        renderArea.innerHTML = '<div class="info-data">Veuillez sélectionner un établissement dans le menu déroulant.</div>';
+        return;
+    }
 
-            const depp = appData.fichiers.depp;
-            const eleves = appData.fichiers.eleves;
+    const depp = appData.fichiers.depp;
+    const eleves = appData.fichiers.eleves;
 
-            const regexSheet = getSheetRegex(level);
-            const sheetsToRead = [];
-            
-            Object.keys(depp).forEach(sheetName => {
-                const match = sheetName.match(regexSheet);
-                if (match && !sheetName.toLowerCase().includes('note')) {
-                    const matiere = match[1].toLowerCase();
-                    const isFr = matiere.includes('francais') || matiere.includes('français');
-                    const isMath = matiere.includes('mathematiques') || matiere.includes('mathématiques');
-                    
-                    if ((selectedSubject === 'fr' || selectedSubject === 'both') && isFr) sheetsToRead.push({ id: sheetName, title: 'Français', data: depp[sheetName] });
-                    if ((selectedSubject === 'math' || selectedSubject === 'both') && isMath) sheetsToRead.push({ id: sheetName, title: 'Mathématiques', data: depp[sheetName] });
-                }
-            });
-
-            if (sheetsToRead.length === 0) {
-                renderArea.innerHTML = `<div class="no-data">Aucune donnée trouvée dans la DEPP pour le niveau ${level === '2' ? '2nde GT' : level + 'ème'}.</div>`;
-                return;
-            }
-
-            const originStudents = [];
-            eleves.forEach(el => {
-                const key = normalizeKey(el['Nom de famille'], el['Prénom']);
-                const classe = String(el['Classe'] || el['Lib. Structure'] || "").trim();
-                const type = String(el['Type Structure'] || "").trim().toUpperCase();
-                
-                let origine = appData.pronoteMap.has(key) 
-                    ? appData.pronoteMap.get(key) 
-                    : String(el['Etablissement d\'origine'] || el["Etab. d'origine"] || el["Etab. Prec."] || "Non renseigné").trim();
-                
-                if (origine === selectedOrigin && classe.startsWith(level) && (type === 'D' || type === 'C' || type === 'DIV' || type === '')) {
-                    originStudents.push({ nomRaw: el['Nom de famille'], prenomRaw: el['Prénom'], classe: classe, key: key });
-                }
-            });
-            originStudents.sort((a, b) => a.nomRaw.localeCompare(b.nomRaw));
-
-            if(originStudents.length === 0) {
-                renderArea.innerHTML = `<div class="info-data">Aucun élève trouvé pour cet établissement au niveau ${level === '2' ? '2nde GT' : level + 'ème'}.</div>`;
-                return;
-            }
-
-            let html = `<div class="results-wrapper"><table class="results-table"><thead>`;
-            html += `<tr><th style="background-color:#fff; border:none; z-index: 3; position: sticky; left:0; top:0;"></th>`;
-            
-            let allCompetences = [];
-            sheetsToRead.forEach(sheetObj => {
-                const sampleRow = sheetObj.data[0] || {};
-                const compCols = Object.keys(sampleRow).slice(3).filter(col => !col.toLowerCase().includes('date'));
-                html += `<th colspan="${compCols.length}" class="subject-th">${sheetObj.title}</th>`;
-                compCols.forEach(c => allCompetences.push({ sheet: sheetObj, colName: c }));
-            });            
-            html += `</tr><tr><th class="student-name" style="white-space: normal; min-width: 200px; max-width: 300px; line-height: 1.3;">Élèves venant de :<br><strong style="font-size: 0.8rem; color: var(--primary-color); display: block; margin-top: 5px;">${selectedOrigin}</strong></th>`;
-            
-            allCompetences.forEach(comp => {
-                const titleClean = comp.colName.replace(/\n/g, ' - ');
-                html += `<th class="vertical-th"><span title="${titleClean}">${titleClean}</span></th>`;
-            });
-            html += `</tr></thead><tbody>`;
-
-            originStudents.forEach(student => {
-                html += `<tr><td class="student-name">${student.nomRaw} ${student.prenomRaw} <br><small style="color:#777; font-weight:normal;">(${student.classe})</small></td>`;
-                
-                allCompetences.forEach(comp => {
-                    const deppRow = comp.sheet.data.find(r => normalizeKey(r['Nom élève'] || r['Nom de famille'] || r['Nom'], r['Prénom élève'] || r['Prénom']) === student.key);
-
-                    if (deppRow) {
-                        const valStr = String(deppRow[comp.colName] || "").toLowerCase().trim();
-                        let displayTxt = "-"; let bgClass = "bg-none"; let fullText = "Non renseigné";
-                        
-                        if (valStr.includes('satisfaisant')) { displayTxt = "Sat."; bgClass = "bg-sat"; fullText = "Satisfaisant"; }
-                        else if (valStr.includes('fragile')) { displayTxt = "Fra."; bgClass = "bg-fra"; fullText = "Fragile"; }
-                        else if (valStr.includes('besoins')) { displayTxt = "Bes."; bgClass = "bg-bes"; fullText = "À besoins"; }
-                        else if (valStr.includes('pas de restitution')) { displayTxt = "PdR."; bgClass = "bg-pdr"; fullText = "Pas de restitution"; }
-                        else if (valStr === 'absent' || valStr === 'absente') { displayTxt = "ABS"; fullText = "Absent"; }
-
-                        html += `<td class="res-cell ${bgClass}" title="${fullText}">${displayTxt}</td>`;
-                    } else {
-                        html += `<td class="res-cell bg-none" title="Donnée manquante">-</td>`;
-                    }
-                });
-                html += `</tr>`;
-            });
-
-            html += `</tbody></table></div>`;
-            html += getMiniLegendHTML();
-            renderArea.innerHTML = html;
+    const regexSheet = getSheetRegex(level);
+    const sheetsToRead = [];
+    
+    Object.keys(depp).forEach(sheetName => {
+        const match = sheetName.match(regexSheet);
+        if (match && !sheetName.toLowerCase().includes('note')) {
+            const matiere = match[1].toLowerCase();
+            const isFr = matiere.includes('fran') || matiere.includes('litt');
+            const isMath = matiere.includes('math') || matiere.includes('numé') || matiere.includes('nume');                    
+            if ((selectedSubject === 'fr' || selectedSubject === 'both') && isFr) sheetsToRead.push({ id: sheetName, title: 'Français', data: depp[sheetName] });
+            if ((selectedSubject === 'math' || selectedSubject === 'both') && isMath) sheetsToRead.push({ id: sheetName, title: 'Mathématiques', data: depp[sheetName] });
         }
+    });
+
+    if (sheetsToRead.length === 0) {
+        renderArea.innerHTML = `<div class="no-data">Aucune donnée trouvée dans la DEPP pour le niveau ${getLevelLabel(level)}.</div>`;
+        return;
+    }
+
+    const originStudents = [];
+    eleves.forEach(el => {
+        const key = normalizeKey(el['Nom de famille'], el['Prénom']);
+        const classe = String(el['Classe'] || el['Lib. Structure'] || "").trim();
+        const type = String(el['Type Structure'] || "").trim().toUpperCase();
+        
+        let origine = appData.pronoteMap.has(key) 
+            ? appData.pronoteMap.get(key) 
+            : String(el['Etablissement d\'origine'] || el["Etab. d'origine"] || el["Etab. Prec."] || "Non renseigné").trim();
+        
+        if (origine === selectedOrigin && getLevelFromClass(classe) === level && (type === 'D' || type === 'C' || type === 'DIV' || type === '')) {
+            originStudents.push({ nomRaw: el['Nom de famille'], prenomRaw: el['Prénom'], classe: classe, key: key });
+        }
+    });
+    originStudents.sort((a, b) => a.nomRaw.localeCompare(b.nomRaw));
+
+    if(originStudents.length === 0) {
+        renderArea.innerHTML = `<div class="info-data">Aucun élève trouvé pour cet établissement au niveau ${getLevelLabel(level)}.</div>`;
+        return;
+    }
+
+    let html = `<div class="results-wrapper"><table class="results-table"><thead>`;
+    html += `<tr><th style="background-color:#fff; border:none; z-index: 3; position: sticky; left:0; top:0;"></th>`;
+    
+    let allCompetences = [];
+    sheetsToRead.forEach(sheetObj => {
+        const sampleRow = sheetObj.data[0] || {};
+        const compCols = Object.keys(sampleRow).slice(3).filter(col => !col.toLowerCase().includes('date'));
+        html += `<th colspan="${compCols.length}" class="subject-th">${sheetObj.title}</th>`;
+        compCols.forEach(c => allCompetences.push({ sheet: sheetObj, colName: c }));
+    });            
+    html += `</tr><tr><th class="student-name" style="white-space: normal; min-width: 200px; max-width: 300px; line-height: 1.3;">Élèves venant de :<br><strong style="font-size: 0.8rem; color: var(--primary-color); display: block; margin-top: 5px;">${selectedOrigin}</strong></th>`;
+    
+    allCompetences.forEach(comp => {
+        const titleClean = comp.colName.replace(/\n/g, ' - ');
+        html += `<th class="vertical-th"><span title="${titleClean}">${titleClean}</span></th>`;
+    });
+    html += `</tr></thead><tbody>`;
+
+    originStudents.forEach(student => {
+        html += `<tr><td class="student-name">${student.nomRaw} ${student.prenomRaw} <br><small style="color:#777; font-weight:normal;">(${student.classe})</small></td>`;
+        
+        allCompetences.forEach(comp => {
+            const deppRow = comp.sheet.data.find(r => normalizeKey(r['Nom élève'] || r['Nom de famille'] || r['Nom'], r['Prénom élève'] || r['Prénom']) === student.key);
+            html += getResultCellHtml(deppRow, comp.colName, false);
+        });
+        html += `</tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    html += getMiniLegendHTML();
+    renderArea.innerHTML = html;
+}
 
         function getMiniLegendHTML() {
             return `
@@ -2618,72 +2779,95 @@
         // ==========================================
         // MODULE VÉRIFICATION DES ABSENTS
         // ==========================================
-        function analyzeMissingResults() {
-            if (!appData.fichiers.eleves || !appData.fichiers.depp) { alert("Importez les fichiers Siècle et DEPP."); return; }
-            const eleves = appData.fichiers.eleves;
-            const depp = appData.fichiers.depp;
-            const deppFr_Presences = new Set();
-            const deppMath_Presences = new Set();
-            const regexSheet = /^\d{2}EVA([456]|2GT)_(.*)$/i;
+/**
+ * Analyse de manière croisée les présences dans les fichiers DEPP 
+ * par rapport à l'annuaire Siècle/Pronote pour détecter les élèves absents.
+ */
+function analyzeMissingResults() {
+    if (!appData.fichiers.eleves || !appData.fichiers.depp) { 
+        alert("Importez les fichiers Siècle et DEPP."); 
+        return; 
+    }
+    
+    const eleves = appData.fichiers.eleves;
+    const depp = appData.fichiers.depp;
+    const deppFr_Presences = new Set();
+    const deppMath_Presences = new Set();
+    
+    // RegEx mise à jour pour inclure 2PRO et LINU (CAP)
+    const regexSheet = /^\d{2}(?:EVA(?:[456]|2GT|2PRO)|LINU)_(.*)$/i;
 
-            Object.keys(depp).forEach(sheetName => {
-                const match = sheetName.match(regexSheet);
-                if (match) {
-                    const matiere = match[2].toLowerCase();
-                    const isFr = matiere.includes('francais') || matiere.includes('français');
-                    const isMath = matiere.includes('mathematiques') || matiere.includes('mathématiques');
-                    if (isFr || isMath) {
-                        depp[sheetName].forEach(row => {
-                            const nomRaw = String(row['Nom élève'] || row['Nom de famille'] || row['Nom'] || "").trim();
-                            if (/\d/.test(nomRaw)) return; 
-                            const prenomRaw = String(row['Prénom élève'] || row['Prénom'] || "").trim();
-                            const key = normalizeKey(nomRaw, prenomRaw);
-                            if (key) {
-                                let estPresent = false;
-                                Object.keys(row).forEach(colName => {
-                                    const colNameLower = colName.toLowerCase();
-                                    if (!colNameLower.includes('nom') && !colNameLower.includes('prénom') && !colNameLower.includes('prenom') && !colNameLower.includes('classe') && !colNameLower.includes('date')) {
-                                        const valeur = String(row[colName] || "").trim().toLowerCase();
-                                        if (valeur !== "" && valeur !== "absent" && valeur !== "absente" && valeur !== "nan" && valeur !== "undefined") {
-                                            estPresent = true;
-                                        }
-                                    }
-                                });
-                                if (estPresent) {
-                                    if (isFr) deppFr_Presences.add(key);
-                                    if (isMath) deppMath_Presences.add(key);
+    // 1. Scan des présences dans la DEPP
+    Object.keys(depp).forEach(sheetName => {
+        const match = sheetName.match(regexSheet);
+        if (match) {
+            const matiere = match[1].toLowerCase();
+            const isFr = matiere.includes('fran') || matiere.includes('litt');
+            const isMath = matiere.includes('math') || matiere.includes('numé') || matiere.includes('nume');
+            
+            // L'accolade ouvrante est bien active et hors du commentaire
+            if (isFr || isMath) {
+                depp[sheetName].forEach(row => {
+                    const nomRaw = String(row['Nom élève'] || row['Nom de famille'] || row['Nom'] || "").trim();
+                    if (/\d/.test(nomRaw)) return; // Filtre les lignes de statistiques intégrées par la DEPP
+                    
+                    const prenomRaw = String(row['Prénom élève'] || row['Prénom'] || "").trim();
+                    const key = normalizeKey(nomRaw, prenomRaw);
+                    
+                    if (key) {
+                        let estPresent = false;
+                        Object.keys(row).forEach(colName => {
+                            const colNameLower = colName.toLowerCase();
+                            // On exclut les colonnes d'identité pour chercher une vraie note de compétence
+                            if (!colNameLower.includes('nom') && !colNameLower.includes('prénom') && !colNameLower.includes('prenom') && !colNameLower.includes('classe') && !colNameLower.includes('date')) {
+                                const valeur = String(row[colName] || "").trim().toLowerCase();
+                                if (valeur !== "" && valeur !== "absent" && valeur !== "absente" && valeur !== "nan" && valeur !== "undefined") {
+                                    estPresent = true;
                                 }
                             }
                         });
+                        
+                        if (estPresent) {
+                            if (isFr) deppFr_Presences.add(key);
+                            if (isMath) deppMath_Presences.add(key);
+                        }
                     }
-                }
-            });
-
-            const elevesUniques = new Map();
-            eleves.forEach(eleve => {
-                const key = normalizeKey(eleve['Nom de famille'], eleve['Prénom']);
-                const typeStruct = String(eleve['Type Structure'] || "").trim().toUpperCase();
-                const classe = String(eleve['Classe'] || eleve['Lib. Structure'] || "").trim();
-                if (key && (classe.startsWith('6') || classe.startsWith('5') || classe.startsWith('4') || classe.startsWith('2'))) {
-                    if (!elevesUniques.has(key) || typeStruct === 'D' || typeStruct === 'C' || typeStruct === 'DIV' || typeStruct === '') {
-                        elevesUniques.set(key, { nomRaw: eleve['Nom de famille'], prenomRaw: eleve['Prénom'], classe });
-                    }
-                }
-            });
-
-            const missingFr = [], missingMath = [];
-            elevesUniques.forEach((data, key) => {
-                const displayLabel = `${data.nomRaw} ${data.prenomRaw} (${data.classe})`;
-                if (!deppFr_Presences.has(key)) missingFr.push(displayLabel);
-                if (!deppMath_Presences.has(key)) missingMath.push(displayLabel);
-            });
-
-            appData.state.missingResults.fr = missingFr;
-            appData.state.missingResults.math = missingMath;
-            document.getElementById('absents-controls').style.display = 'flex';
-            document.getElementById('absents-results').style.display = 'grid';
-            renderMissingLists();
+                });
+            }
         }
+    });
+
+    // 2. Construction du référentiel des élèves attendus (Annuaire)
+    const elevesUniques = new Map();
+    eleves.forEach(eleve => {
+        const key = normalizeKey(eleve['Nom de famille'], eleve['Prénom']);
+        const typeStruct = String(eleve['Type Structure'] || "").trim().toUpperCase();
+        const classe = String(eleve['Classe'] || eleve['Lib. Structure'] || "").trim();
+        
+        // Inclut désormais explicitement les CAP et PRO en cherchant 1 ou 2
+        if (key && (classe.startsWith('6') || classe.startsWith('5') || classe.startsWith('4') || classe.startsWith('2') || classe.startsWith('1'))) {
+            if (!elevesUniques.has(key) || typeStruct === 'D' || typeStruct === 'C' || typeStruct === 'DIV' || typeStruct === '') {
+                elevesUniques.set(key, { nomRaw: eleve['Nom de famille'], prenomRaw: eleve['Prénom'], classe });
+            }
+        }
+    });
+
+    // 3. Croisement (Différence entre Attendus et Présents)
+    const missingFr = [], missingMath = [];
+    elevesUniques.forEach((data, key) => {
+        const displayLabel = `${data.nomRaw} ${data.prenomRaw} (${data.classe})`;
+        if (!deppFr_Presences.has(key)) missingFr.push(displayLabel);
+        if (!deppMath_Presences.has(key)) missingMath.push(displayLabel);
+    });
+
+    // 4. Mise à jour de l'état et rendu UI
+    appData.state.missingResults.fr = missingFr;
+    appData.state.missingResults.math = missingMath;
+    document.getElementById('absents-controls').style.display = 'flex';
+    document.getElementById('absents-results').style.display = 'grid';
+    renderMissingLists();
+}
+
 
         function renderMissingLists() {
             const { fr, math } = appData.state.missingResults;
@@ -2790,67 +2974,92 @@
             renderArea.innerHTML = buildUI(statsData);
         }
 
-        function generateStatisticsCube() {
-            const level = appData.state.selectedLevel;
-            const view = appData.state.currentViewType;
-            const elevesList = appData.fichiers.eleves;
-            const deppList = appData.fichiers.depp;
-            const annuaire = new Map();
-            elevesList.forEach(el => {
-                const key = normalizeKey(el['Nom de famille'], el['Prénom']);
-                const classe = String(el['Classe'] || el['Lib. Structure'] || "").trim();
-                const type = String(el['Type Structure'] || "").trim().toUpperCase();
-                const sexe = String(el['Sexe'] || "").trim().toUpperCase() === 'M' ? 'Garçons' : 'Filles';
-                let origine = appData.pronoteMap.has(key) ? appData.pronoteMap.get(key) : String(el['Etablissement d\'origine'] || el["Etab. d'origine"] || el["Etab. Prec."] || "Non renseigné").trim();
-                if (key && classe.startsWith(level) && (type === 'D' || type === 'C' || type === 'DIV' || type === '')) annuaire.set(key, { classe, sexe, origine });
-            });
+/**
+ * Construit un cube OLAP local (Objet multidimensionnel) des statistiques.
+ * Agrège les données par Matière > Compétence > Groupe (Cohorte, Sexe, Classe, Origine).
+ * 
+ * @returns {Object} Cube de données structuré pour l'UI et les exports.
+ */
+function generateStatisticsCube() {
+    const level = appData.state.selectedLevel;
+    const view = appData.state.currentViewType;
+    const elevesList = appData.fichiers.eleves;
+    const deppList = appData.fichiers.depp;
+    const annuaire = new Map();
+    
+    // 1. CONSTRUCTION DE L'ANNUAIRE (Filtrage de la cohorte active)
+    elevesList.forEach(el => {
+        const key = normalizeKey(el['Nom de famille'], el['Prénom']);
+        const classe = String(el['Classe'] || el['Lib. Structure'] || "").trim().toUpperCase();
+        const type = String(el['Type Structure'] || "").trim().toUpperCase();
+        const sexe = String(el['Sexe'] || "").trim().toUpperCase() === 'M' ? 'Garçons' : 'Filles';
+        let origine = appData.pronoteMap.has(key) ? appData.pronoteMap.get(key) : String(el['Etablissement d\'origine'] || el["Etab. d'origine"] || el["Etab. Prec."] || "Non renseigné").trim();
+        
+        // Sécurisation du niveau : Évite que "2PRO" ne fuite dans la sélection de la "2nde GT" ("2")
+        const classLevel = getLevelFromClass(classe);
+const isRightLevel = (classLevel === level);
 
-            const stats = {}; 
-            const regexSheet = getSheetRegex(level);
-            const initCounter = () => ({ 'sat': 0, 'fra': 0, 'bes': 0, 'pdr': 0, 'total': 0 });
+        if (key && isRightLevel && (type === 'D' || type === 'C' || type === 'DIV' || type === '')) {
+            annuaire.set(key, { classe, sexe, origine });
+        }
+    });
 
-            Object.keys(deppList).forEach(sheetName => {
-                const match = sheetName.match(regexSheet);
-                if (match) {
-                    const matiere = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
-                    if (!stats[matiere]) stats[matiere] = {};
-                    const competences = Object.keys(deppList[sheetName][0] || {}).slice(3).filter(col => !col.toLowerCase().includes('date'));
+    const stats = {}; 
+    const regexSheet = getSheetRegex(level);
+    const initCounter = () => ({ 'sat': 0, 'fra': 0, 'bes': 0, 'pdr': 0, 'total': 0 });
+
+    // 2. PARCOURS ET AGRÉGATION DES RÉSULTATS DEPP
+    Object.keys(deppList).forEach(sheetName => {
+        const match = sheetName.match(regexSheet);
+        if (match) {
+            // Normalisation des nomenclatures de la voie professionnelle (CAP LINU)
+            const rawMatiere = match[1].toLowerCase();
+            let matiere = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+            
+            if (rawMatiere.includes('fran') || rawMatiere.includes('litt')) matiere = 'Français';
+            if (rawMatiere.includes('math') || rawMatiere.includes('numé') || rawMatiere.includes('nume')) matiere = 'Mathématiques';
+
+            if (!stats[matiere]) stats[matiere] = {};
+            const competences = Object.keys(deppList[sheetName][0] || {}).slice(3).filter(col => !col.toLowerCase().includes('date'));
+            
+            deppList[sheetName].forEach(row => {
+                const key = normalizeKey(row['Nom élève'] || row['Nom de famille'] || row['Nom'], row['Prénom élève'] || row['Prénom']);
+                
+                if (key && annuaire.has(key)) {
+                    const info = annuaire.get(key);
+                    const groupsToUpdate = ['Cohorte'];
                     
-                    deppList[sheetName].forEach(row => {
-                        const key = normalizeKey(row['Nom élève'] || row['Nom de famille'] || row['Nom'], row['Prénom élève'] || row['Prénom']);
-                        if (key && annuaire.has(key)) {
-                            const info = annuaire.get(key);
-                            const groupsToUpdate = ['Cohorte'];
-                            if (view === 'sexe') groupsToUpdate.push(info.sexe);
-                            if (view === 'classe') groupsToUpdate.push(info.classe);
-                            if (view === 'origine' && appData.state.selectedOrigins.includes(info.origine)) groupsToUpdate.push(info.origine);
+                    if (view === 'sexe') groupsToUpdate.push(info.sexe);
+                    if (view === 'classe') groupsToUpdate.push(info.classe);
+                    if (view === 'origine' && appData.state.selectedOrigins.includes(info.origine)) groupsToUpdate.push(info.origine);
 
-                            if (!stats[matiere]['NIVEAU GLOBAL (Discipline)']) stats[matiere]['NIVEAU GLOBAL (Discipline)'] = {};
-                            groupsToUpdate.forEach(grp => { if (!stats[matiere]['NIVEAU GLOBAL (Discipline)'][grp]) stats[matiere]['NIVEAU GLOBAL (Discipline)'][grp] = initCounter(); });
+                    if (!stats[matiere]['NIVEAU GLOBAL (Discipline)']) stats[matiere]['NIVEAU GLOBAL (Discipline)'] = {};
+                    groupsToUpdate.forEach(grp => { 
+                        if (!stats[matiere]['NIVEAU GLOBAL (Discipline)'][grp]) stats[matiere]['NIVEAU GLOBAL (Discipline)'][grp] = initCounter(); 
+                    });
 
-                            competences.forEach(comp => {
-                                const valStr = String(row[comp] || "").toLowerCase().trim();
-                                let scoreKey = null;
-                                if (valStr.includes('satisfaisant')) scoreKey = 'sat';
-                                else if (valStr.includes('fragile')) scoreKey = 'fra';
-                                else if (valStr.includes('besoins')) scoreKey = 'bes';
-                                else if (valStr.includes('pas de restitution')) scoreKey = 'pdr';
-                                
-                                if (scoreKey) {
-                                    if (!stats[matiere][comp]) stats[matiere][comp] = {};
-                                    groupsToUpdate.forEach(grp => {
-                                        if (!stats[matiere][comp][grp]) stats[matiere][comp][grp] = initCounter();
-                                        stats[matiere][comp][grp][scoreKey]++; stats[matiere][comp][grp].total++;
-                                        stats[matiere]['NIVEAU GLOBAL (Discipline)'][grp][scoreKey]++; stats[matiere]['NIVEAU GLOBAL (Discipline)'][grp].total++;
-                                    });
-                                }
+                    competences.forEach(comp => {
+                        const scoreKey = parseDeppValue(row[comp]);
+                        
+                        // Si l'élève a une note ET qu'il était concerné par l'épreuve (Filtre adaptatif)
+                        if (scoreKey && scoreKey !== 'nc') {
+                            if (!stats[matiere][comp]) stats[matiere][comp] = {};
+                            
+                            groupsToUpdate.forEach(grp => {
+                                if (!stats[matiere][comp][grp]) stats[matiere][comp][grp] = initCounter();
+                                stats[matiere][comp][grp][scoreKey]++; 
+                                stats[matiere][comp][grp].total++;
+                                stats[matiere]['NIVEAU GLOBAL (Discipline)'][grp][scoreKey]++; 
+                                stats[matiere]['NIVEAU GLOBAL (Discipline)'][grp].total++;
                             });
                         }
                     });
                 }
             });
-            return stats;
         }
+    });
+    return stats;
+}
 
         function buildUI(statsData) {
             const isGraph = appData.state.isGraphicalView;
@@ -2931,8 +3140,9 @@
             if (!deppObject) return stats;
 
             const sheetLevel = targetLevel === '2' ? '2GT' : targetLevel;
-            const regexSheet = new RegExp(`(?:(\\d{2})\\s*)?EVA\\s*(?:(\\d{2})\\s*)?.*?${sheetLevel}.*?(FRAN|MATH)`, 'i');
-            
+const regexSheet = targetLevel === '1CAP' 
+    ? new RegExp(`(?:(\\d{2})\\s*)?LINU\\s*(?:(\\d{2})\\s*)?.*?(LITT|NUM)`, 'i')
+    : new RegExp(`(?:(\\d{2})\\s*)?EVA\\s*(?:(\\d{2})\\s*)?.*?${targetLevel === '2' ? '2GT' : targetLevel}.*?(FRAN|MATH)`, 'i');            
             Object.keys(deppObject).forEach(sheetName => {
                 const match = sheetName.match(regexSheet);
                 if (match && !sheetName.toLowerCase().includes('note')) {
@@ -2953,25 +3163,10 @@
                         targetSubj.competences[compName] = { sat: 0, fra: 0, bes: 0, pdr: 0, total: 0 };
                         
                         deppObject[sheetName].forEach(row => {
-                            const valStr = String(row[compName] || "").toLowerCase().trim();
-                            if (valStr !== "") {
-                                if (valStr.includes('satisfaisant')) {
-                                    targetSubj.competences[compName].sat++;
-                                    targetSubj.global.sat++; 
-                                }
-                                else if (valStr.includes('fragile')) {
-                                    targetSubj.competences[compName].fra++;
-                                    targetSubj.global.fra++;
-                                }
-                                else if (valStr.includes('besoins')) {
-                                    targetSubj.competences[compName].bes++;
-                                    targetSubj.global.bes++;
-                                }
-                                else if (valStr.includes('pas de restitution') || valStr === 'absent' || valStr === 'absente' || valStr === 'non renseigné') {
-                                    targetSubj.competences[compName].pdr++;
-                                    targetSubj.global.pdr++;
-                                }
-                                
+                            const scoreKey = parseDeppValue(row[compName]);
+                            if (scoreKey && scoreKey !== 'nc') {
+                                targetSubj.competences[compName][scoreKey]++;
+                                targetSubj.global[scoreKey]++;
                                 targetSubj.competences[compName].total++;
                                 targetSubj.global.total++;
                             }
@@ -3049,7 +3244,7 @@
 
                 // Définition centralisée des niveaux à traiter (Collège + LGT)
                 // Le script créera dynamiquement les slides uniquement si des données existent
-                const niveauxActifs = ['2', '6', '5', '4'];
+const niveauxActifs = ['2', '2PRO', '1CAP', '6', '5', '4'];
                 
                 // BOUCLE SUR LES NIVEAUX
                 for (const lvl of niveauxActifs) {
@@ -3215,13 +3410,14 @@
                 try {
                     btnSave.innerText = "⏳ Sauvegarde...";
                     
-                    const sessionData = {
+const sessionData = {
                         fichiers: {
                             eleves: appData.fichiers.eleves,
                             depp: appData.fichiers.depp,
                             deppHistory: appData.fichiers.deppHistory
                         },
                         pronoteMap: Array.from(appData.pronoteMap.entries()),
+                        emailMap: Array.from(appData.emailMap.entries()), // <-- NOUVEAU
                         state: appData.state
                     };
 
@@ -3267,9 +3463,10 @@
                     try {
                         const parsedData = JSON.parse(event.target.result);
                         
-                        if(parsedData.fichiers) appData.fichiers = parsedData.fichiers;
-                        if(parsedData.pronoteMap) appData.pronoteMap = new Map(parsedData.pronoteMap);
-                        if(parsedData.state) Object.assign(appData.state, parsedData.state);
+if(parsedData.fichiers) appData.fichiers = parsedData.fichiers;
+                    if(parsedData.pronoteMap) appData.pronoteMap = new Map(parsedData.pronoteMap);
+                    if(parsedData.emailMap) appData.emailMap = new Map(parsedData.emailMap); // <-- NOUVEAU
+                    if(parsedData.state) Object.assign(appData.state, parsedData.state);
                         
                         fileRestore.value = ""; 
 

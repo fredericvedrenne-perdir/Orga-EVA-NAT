@@ -318,7 +318,7 @@
                         <li>L'archive ZIP contiendra directement un fichier de base de données au format <strong>.csv</strong> prêt à être utilisé dans Thunderbird.</li>
                         <li><strong>Important :</strong> Extrayez bien le fichier .csv ET les PDF dans le même dossier sur votre ordinateur.</li>
                     </ul>
-                    <a href="mailto:?subject=Résultats des évaluations nationales de {{Prénom}} {{Nom de famille}}&body=Bonjour,%0A%0AVeuillez trouver ci-joint les résultats des évaluations nationales de {{Prénom}}.%0A%0ACordialement," 
+                    <a href="mailto:?to={{Mail responsable 1}} ; {{Mail responsable 2}}&subject=Résultats des évaluations nationales de {{Prénom}} {{Nom de famille}} {{Classe}} &body=Madame, Monsieur,%0A%0AVeuillez trouver ci-joint les résultats des évaluations nationales de {{Prénom}} {{Nom de famille}} {{Classe}}.%0A%0AVous en souhaitant bonne réception. %0A%0ACordialement," 
                        class="btn btn-outline" 
                        style="text-decoration: none; display: inline-block; font-size: 0.9rem;">
                         📧 Ouvrir Thunderbird et pré-remplir le modèle d'e-mail
@@ -2508,7 +2508,7 @@ function buildClassTableHTML(selectedClass, selectedSubject, isPdf = false, eple
                     appData.fichiers.deppHistory[historyKey] = {};
                     workbook.SheetNames.forEach(sheet => { appData.fichiers.deppHistory[historyKey][sheet] = XLSX.utils.sheet_to_json(workbook.Sheets[sheet], { defval: "" }); });
                 }
-                else if (zoneId === 'drop-emails') {
+else if (zoneId === 'drop-emails') {
                     const rawSiecle = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
                     appData.emailMap = new Map(); 
                     
@@ -2518,9 +2518,21 @@ function buildClassTableHTML(selectedClass, selectedSubject, isPdf = false, eple
                             let mail1 = "", mail2 = "";
                             Object.keys(el).forEach(col => {
                                 const lowerCol = col.toLowerCase();
-                                if (lowerCol.includes('mail') || lowerCol.includes('courriel')) {
-                                    if (!mail1) mail1 = el[col];
-                                    else if (!mail2) mail2 = el[col];
+                                // On cible "mail" ou "courriel" en évitant les options O/N (alertes, envois, sms)
+                                if ((lowerCol.includes('mail') || lowerCol.includes('courriel')) && 
+                                    !lowerCol.includes('envoi') && 
+                                    !lowerCol.includes('alerte') && 
+                                    !lowerCol.includes('sms')) {
+                                    
+                                    const val = String(el[col] || "").trim();
+                                    // On s'assure que ce n'est pas un simple "O" ou "N"
+                                    if (val && val !== 'O' && val !== 'N' && val.length > 3) {
+                                        if (!mail1) {
+                                            mail1 = val;
+                                        } else if (!mail2 && val !== mail1) {
+                                            mail2 = val;
+                                        }
+                                    }
                                 }
                             });
                             appData.emailMap.set(k, { mail1, mail2 });
